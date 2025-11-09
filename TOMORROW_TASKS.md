@@ -1,35 +1,31 @@
-# 📅 Tomorrow's Tasks - Travel Planner App
+# Tasks for Tomorrow
 
-## 🎯 **Priority Tasks:**
+## ⚠️ First Steps
+- **Start the local server**: Run `python -m http.server 8000` in the project directory
+- **Open the app**: Navigate to `http://localhost:8000/digital-nomad-planner.html` in your browser
 
-### **1. Relationship Timeline Visualization**
-- **Current Status**: Basic timeline is working but needs visual improvements
-- **Goals**:
-  - Improve the visual design of the relationship timeline
-  - Make it more engaging and easier to read
-  - Consider adding icons, better spacing, or interactive elements
-  - Ensure it displays all relationship log entries properly
+## Priority Tasks
 
-### **2. Us Page Enhancements**
-- **Current Status**: Profile pictures now working with GitHub hosting
-- **Goals**:
-  - Review and improve the overall design of the Us tab
-  - Enhance the profile cards layout
-  - Improve visa tracking display
-  - Consider adding more interactive elements or statistics
+1. **Kimber to find a new loading animation that works with HTML**
+   - Current loading animation may need to be replaced
+   - Ensure it works properly with HTML/CSS/JavaScript
 
-## 📋 **Notes:**
-- ✅ Profile pictures are now hosted on GitHub and working
-- ✅ All tabs (Us, Past, Present, Future) are functional
-- ✅ Map is working correctly
-- ✅ Data loading from Google Sheets is stable
+2. **Kimber to fix icons**
+   - Remake past.svg and future.svg icons to be bolder/filled
+   - Icons are now 50px height (40px on mobile) - design should work at this size
+   - Ensure they appear as solid filled icons, not outlines
 
-## 🔗 **Resources:**
-- GitHub Repository: https://github.com/kimbersykes87-source/TravelPlanner
-- Local Server: http://127.0.0.1:8000/digital-nomad-planner.html
-- Google Sheets: https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit
+3. **Review Present tab for functionality**
+   - Check all features work correctly
+   - Verify booking form and display functionality
+   - Test data loading and display
+
+4. **Review Future tab for functionality**
+   - Check all features work correctly
+   - Verify timeline/scenario planning functionality
+   - Test data loading and display
 
 ---
-*Created: $(Get-Date -Format "yyyy-MM-dd HH:mm")*
 
+*Created: November 2025*
 

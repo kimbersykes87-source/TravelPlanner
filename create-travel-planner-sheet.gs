@@ -34,11 +34,14 @@ function createProfilesSheet(spreadsheet) {
   const sheet = spreadsheet.insertSheet('Profiles');
   
   // Headers - Updated to match final design
+  // Note: New columns added AFTER ProfilePictureURL to avoid conflicts with existing data
   const headers = [
     'ProfileID', 'FullName', 'DOB', 'PassportNumber', 'PassportExpiry', 'PassportIssued', 
     'PlaceOfBirth', 'FrequentFlyer1', 'FFNumber1', 'FFStatus1', 
     'FrequentFlyer2', 'FFNumber2', 'FFStatus2', 
-    'FrequentFlyer3', 'FFNumber3', 'FFStatus3', 'ProfilePictureURL'
+    'FrequentFlyer3', 'FFNumber3', 'FFStatus3', 'ProfilePictureURL',
+    'Passport2Number', 'Passport2Country', 'Passport2Expiry', 'Passport2Issued',
+    'USVisaNumber', 'USVisaExpiry', 'USVisaIssued'
   ];
   
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -46,16 +49,24 @@ function createProfilesSheet(spreadsheet) {
   // Sample data - Kimber and Siona with accurate information and real profile pictures
   const profiles = [
     [
-      'kimber', 'Kimber', '1987-06-04', '149026510', '2030-01-01', '2020-01-01',
-      'Subiaco Australia', 'British Airways', '60199179', 'Gold',
-      'Miles & Bonus', '182081351', 'Blue', '', '', '',
-      'https://i.ibb.co/1GTMbQNg/Kimber-Profile-Pic.jpg'
+      'kimber', 'Kimber', '1987-06-04', '149026510', '2034-06-25', '2024-06-25',
+      'Subiaco Australia', 
+      'British Airways', '60199179', 'Gold',
+      'Miles & Bonus', '182081351', 'Blue',
+      'KTN', '168032115', '',
+      'https://raw.githubusercontent.com/kimbersykes87-source/TravelPlanner/main/Kimber_Profile_Pic.jpg',
+      '', 'Australia', '', '',  // Second passport (Australian) - to be filled in
+      '', '', ''  // US Visa (not applicable for Kimber - has ESTA)
     ],
     [
       'siona', 'Siona', '1984-07-24', '147550348', '2034-04-24', '2024-04-24',
-      'Rochdale UK', 'British Airways', '03346361', 'Silver',
-      'ConnectMiles', '117310957', 'Member', '', '', '',
-      'https://i.ibb.co/MDf8KN8C/Siona-Profile-Pic.jpg'
+      'Rochdale UK',
+      'British Airways', '3346361', 'Silver',
+      'ConnectMiles', '117310957', 'Blue',
+      'KTN', '0', '',
+      'https://raw.githubusercontent.com/kimbersykes87-source/TravelPlanner/main/Siona_Profile_Pic.jpg',
+      '', '', '', '',  // Second passport (not applicable)
+      '', '', ''  // US B1/B2 Visa - to be filled in
     ]
   ];
   

@@ -671,6 +671,9 @@
             font-size: 12px;
             font-weight: 500;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .country-tag:hover {
@@ -690,6 +693,32 @@
         .country-tag.both {
             background: rgba(168, 85, 247, 0.3);
             border: 1px solid rgba(168, 85, 247, 0.5);
+        }
+
+        .country-flag {
+            width: 22px;
+            height: 16px;
+            border-radius: 3px;
+            object-fit: cover;
+            box-shadow: 0 0 4px rgba(15, 23, 42, 0.3);
+        }
+
+        .timeline-country-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            font-weight: 500;
+            margin-right: 6px;
+        }
+
+        .timeline-country-divider {
+            color: #94a3b8;
+            margin: 0 6px;
+            font-weight: 600;
         }
 
         /* Stats Tiles */
@@ -772,6 +801,9 @@
             flex: 1;
             color: white;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .days-count {
@@ -1156,15 +1188,20 @@
         }
 
         .booked-type-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 17px;
-            color: #0f172a;
-            background: rgba(248, 250, 252, 0.9);
+            width: 28px;
+            height: 28px;
+            display: inline-block;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            transition: transform 0.15s ease;
+        }
+
+        .booked-type-icon:hover {
+            transform: scale(1.08);
         }
 
         .booked-actions {
@@ -2901,6 +2938,84 @@
             
             const country = currentData.countries.find(c => c[1] === alpha3Code);
             return country ? country[0] : alpha3Code; // Return proper name or code if not found
+        }
+
+        function findCountryEntry(countryInput) {
+            if (!currentData.countries || !countryInput) return null;
+            const value = (countryInput || '').toString().trim();
+            if (!value) return null;
+
+            const countries = currentData.countries;
+            const upper = value.toUpperCase();
+            const lower = value.toLowerCase();
+
+            let entry = countries.find(row => (row[1] || '').toUpperCase() === upper);
+            if (!entry) {
+                entry = countries.find(row => (row[2] || '').toUpperCase() === upper);
+            }
+            if (!entry) {
+                entry = countries.find(row => (row[0] || '').toLowerCase() === lower);
+            }
+            if (!entry) {
+                const alpha3 = standardizeCountryName(value);
+                if (alpha3 && alpha3.length === 3 && alpha3.toUpperCase() !== upper) {
+                    entry = countries.find(row => (row[1] || '').toUpperCase() === alpha3.toUpperCase());
+                }
+            }
+            return entry || null;
+        }
+
+        function getCountryDisplay(countryInput) {
+            const entry = findCountryEntry(countryInput);
+            if (entry) {
+                return {
+                    name: entry[0] || countryInput || '',
+                    alpha3: entry[1] || '',
+                    alpha2: entry[2] || '',
+                    flag: entry[3] || ''
+                };
+            }
+            return {
+                name: countryInput || '',
+                alpha3: '',
+                alpha2: '',
+                flag: ''
+            };
+        }
+
+        function renderCountryTag(countryName, extraClass = '') {
+            const display = getCountryDisplay(countryName);
+            const safeName = sanitizeText(display.name);
+            const flagMarkup = display.flag ? `<img class="country-flag" src="${sanitizeAttribute(display.flag)}" alt="${safeName} flag">` : '';
+            const classes = ['country-tag'];
+            if (extraClass) classes.push(extraClass);
+            return `<span class="${classes.join(' ')}">${flagMarkup}<span>${safeName}</span></span>`;
+        }
+
+        function renderTimelineCountryChip(countryName, roleLabel = '') {
+            if (!countryName) return '';
+            const display = getCountryDisplay(countryName);
+            const safeName = sanitizeText(display.name);
+            const flagMarkup = display.flag ? `<img class="country-flag" src="${sanitizeAttribute(display.flag)}" alt="${safeName} flag">` : '';
+            const roleSuffix = roleLabel ? ` <span style="color:#a1a1aa;font-size:0.85em;">(${sanitizeText(roleLabel)})</span>` : '';
+            return `<span class="timeline-country-chip">${flagMarkup}<span>${safeName}${roleSuffix}</span></span>`;
+        }
+
+        function renderTimelineCountries(period) {
+            if (!period) return '';
+            if (period.type === 'together') {
+                const country = period.kimberCountry || period.countries;
+                return renderTimelineCountryChip(country);
+            }
+            const chips = [];
+            const kimberCountry = period.kimberCountry || (period.countries?.split('/')?.[0] || '').trim();
+            const sionaCountry = period.sionaCountry || (period.countries?.split('/')?.[1] || '').trim();
+            const kimberChip = renderTimelineCountryChip(kimberCountry, 'Kimber');
+            const sionaChip = renderTimelineCountryChip(sionaCountry, 'Siona');
+            if (kimberChip) chips.push(kimberChip);
+            if (kimberChip && sionaChip) chips.push('<span class="timeline-country-divider">/</span>');
+            if (sionaChip) chips.push(sionaChip);
+            return chips.join('');
         }
 
         // Tab switching
@@ -4726,13 +4841,17 @@
             const tile = document.createElement('div');
             tile.className = 'stats-tile';
             
-            const countriesList = top5Countries.map((item, index) => `
+            const countriesList = top5Countries.map((item, index) => {
+                const display = getCountryDisplay(item.country);
+                const safeName = sanitizeText(display.name);
+                const flagMarkup = display.flag ? `<img class=\"country-flag\" src=\"${sanitizeAttribute(display.flag)}\" alt=\"${safeName} flag\">` : '';
+                return `
                 <div class="top-country-item">
                     <div class="rank">${index + 1}</div>
-                    <div class="country-name">${getProperEnglishName(item.country)}</div>
+                    <div class="country-name">${flagMarkup}<span>${safeName}</span></div>
                     <div class="days-count">${item.days} days</div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
             tile.innerHTML = `
                 <h3><img src="assets/icons/passport.svg" alt="Passport">Top 5 Relationship Countries</h3>
@@ -4881,7 +5000,7 @@
                         <div class="tile-count">${togetherCountries.length} countries</div>
                     </div>
                     <div class="tile-countries">
-                        ${togetherCountries.map(country => `<span class="country-tag both">${country}</span>`).join('')}
+                        ${togetherCountries.map(country => renderCountryTag(country, 'both')).join('')}
                     </div>
                 `;
                 container.appendChild(togetherTile);
@@ -4898,7 +5017,7 @@
                         <div class="tile-count">${kimberCountries.length} countries</div>
                     </div>
                     <div class="tile-countries">
-                        ${kimberCountries.map(country => `<span class="country-tag kimber">${country}</span>`).join('')}
+                        ${kimberCountries.map(country => renderCountryTag(country, 'kimber')).join('')}
                     </div>
                 `;
                 container.appendChild(kimberTile);
@@ -4915,7 +5034,7 @@
                         <div class="tile-count">${sionaCountries.length} countries</div>
                     </div>
                     <div class="tile-countries">
-                        ${sionaCountries.map(country => `<span class="country-tag siona">${country}</span>`).join('')}
+                        ${sionaCountries.map(country => renderCountryTag(country, 'siona')).join('')}
                     </div>
                 `;
                 container.appendChild(sionaTile);
@@ -5057,6 +5176,9 @@
                         }
                     }
                     
+                    const countriesMarkup = renderTimelineCountries(period) || sanitizeText(period.countries || '');
+                    const notesMarkup = period.notes ? sanitizeText(period.notes) : '';
+
                     timelineItem.innerHTML = `
                         <div style="display: flex; align-items: flex-start; margin-bottom: 5px;">
                             <div class="timeline-date" style="color: #ccc; font-size: 0.9em; font-family: 'Courier New', monospace; min-width: 200px; margin-right: 15px; flex-shrink: 0;">
@@ -5064,8 +5186,8 @@
                                 <div style="font-size: 0.8em; color: #999; margin-top: 2px;">${daysCount} day${daysCount !== 1 ? 's' : ''}</div>
                             </div>
                             <div style="flex: 1;">
-                                <div class="timeline-countries" style="color: white; font-weight: bold; margin-bottom: 3px;">${period.countries}</div>
-                                <div class="timeline-notes" style="color: #ccc; font-size: 0.9em;">${period.notes || ''}</div>
+                                <div class="timeline-countries" style="color: white; font-weight: bold; margin-bottom: 3px; display:flex; flex-wrap: wrap; gap:8px;">${countriesMarkup}</div>
+                                <div class="timeline-notes" style="color: #ccc; font-size: 0.9em;">${notesMarkup}</div>
                             </div>
                         </div>
                     `;
@@ -6359,8 +6481,8 @@
             const notesRow = booking.notes ? buildDetailRow('Notes', booking.notes) : '';
             const detailsRow = buildDetailRow('Details', booking.details || 'Details to follow.');
             const typeMarker = iconUrl
-                ? `<span class="booked-type-icon" style="background:${accent};"><img src="${iconUrl}" alt="${sanitizeText(booking.bookingType || 'Booking')} icon"></span>`
-                : `<span class="booked-type-icon" style="background:${accent};">${emoji}</span>`;
+                ? `<span class="booked-type-icon" style="background-color:${accent};-webkit-mask:url('${iconUrl}') center/contain no-repeat;mask:url('${iconUrl}') center/contain no-repeat;"></span>`
+                : `<span class="booked-type-icon" style="background:${accent};display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:16px;color:#0f172a;">${emoji}</span>`;
 
             return `
                 <details class="booked-card" style="border-left: 4px solid ${accent};">

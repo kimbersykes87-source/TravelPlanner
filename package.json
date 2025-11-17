@@ -1,0 +1,22 @@
+{
+  "name": "travel-planner",
+  "version": "1.0.0",
+  "description": "Digital Nomad Travel Planner - Deployed on Cloudflare Pages",
+  "scripts": {
+    "dev": "wrangler pages dev",
+    "deploy": "wrangler pages deploy",
+    "build": "echo 'Static site - no build step required'",
+    "test": "echo 'No tests yet'"
+  },
+  "keywords": [
+    "travel",
+    "planner",
+    "cloudflare-pages"
+  ],
+  "author": "Kimber Sykes",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
+

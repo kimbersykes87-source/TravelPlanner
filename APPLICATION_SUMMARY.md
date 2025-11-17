@@ -88,8 +88,21 @@
 - **Columns**: BookingID, ProfileID, Type, SubType, StartDate, EndDate, Country, City, Details, LinkedBookingID
 
 #### 7. **FutureScenarios Sheet**
-- **Purpose**: Planned future travel scenarios
-- **Columns**: ScenarioID, SectionID, ProfileID, StartDate, EndDate, Country, City, Notes
+- **Purpose**: Scenario-level metadata for planned future travel
+- **Columns**: ScenarioID, ScenarioHeadline, ScenarioCreatedBy, ScenarioRating, ScenarioStart, ScenarioEnd, ScenarioSummary, ScenarioIcon, AccommodationType, LastUpdated
+
+#### 8. **ScenarioStays Sheet**
+- **Purpose**: Detailed stays within a scenario
+- **Columns**: ScenarioID, StayID, ProfileScope, Country, City, StartDate, EndDate, Notes, AccommodationType, RouteNotes
+
+#### 9. **VisaRules Sheet**
+- **Purpose**: Centralized visa rule definitions for validation
+- **Columns**: RuleID, Jurisdiction, WindowDays, MaxDays, ContiguousTerritory, Notes
+
+#### 10. **ScenarioCalendar Sheet** *(REMOVED - Redundant)*
+- **Status**: Removed in redundancy cleanup - data derived from ScenarioStays when needed
+- **Previous Purpose**: Normalized day-level entries for scenario validation and analytics
+- **Reason for Removal**: Redundant storage - all day-level data can be derived from ScenarioStays date ranges
 
 ---
 
@@ -208,11 +221,14 @@
 
 ### 4. **Future Tab** - "Future Scenarios"
 
-#### Scenario Display
-- **Grouping**: Scenarios grouped by ScenarioID
-- **Sections**: Within each scenario, sections show together/separate periods
-- **Information**: Dates, countries, cities, and notes
-- **Status**: Viewing only (creation form is placeholder)
+#### Scenario Planner
+- **Overview Tiles**: Icon, headline, rating, summary badges (duration, countries, travellers, accommodation), and last-updated timestamp
+- **Filtering**: Quick filter by creator (Kimber/Siona/Both)
+- **Detail Drawer**: Expandable view with itinerary timeline (flags, day counts, notes), visa projection table, and Leaflet map highlighting selected countries
+- **Validation**: Server-side visa simulations reuse Us-tab rules (US ESTA admissions, Siona B1/B2 rolling 365, UK tax-year, Schengen rolling 180); warnings/errors surfaced before save
+- **Editor**: Modal form supports headline, creator, icon picker, dates, rating, scenario notes, accommodation type, and dynamic stay rows (scope, country, city, notes, route highlights)
+- **CRUD**: Create/update/delete scenarios persisted to Sheets (`FutureScenarios`, `ScenarioStays`)
+- **Note**: `ScenarioCalendar` sheet was removed - data derived on-demand from `ScenarioStays`
 
 ---
 
@@ -308,16 +324,24 @@ TravelPlanner/
 ## ⚠️ Known Limitations
 
 1. **Booking Persistence**: Present tab bookings are not saved to Google Sheets (local only)
-2. **Scenario Creation**: Future tab scenario creation form is placeholder only
+2. **Scenario Creation**: Future tab scenario creation form is placeholder only (being replaced by full CRUD workflow)
 3. **Data Write**: App is read-only (no write functionality to Sheets)
 4. **CORS**: Relies on proxy services for data loading (may fail if proxies are down)
+
+## 🔄 Recent Database Optimizations
+
+### Redundancy Removals (2025-01-16)
+1. **ScenarioCalendar Sheet**: Removed - redundant day-level data derived from `ScenarioStays` on-demand
+2. **ScenarioCache Sheets**: Disabled - cache sheets (`ScenarioCacheMetadata`, `ScenarioCacheDays`, `ScenarioCacheSummary`) not used in frontend, data calculated on-demand from source sheets
+3. **Historical Data Processing**: Consolidated - `buildHistoryEntries_()` and `buildHistoricalVisaDayNumbers_()` now share a consolidated helper that reads `RelationshipLog` once per profile instead of twice
+4. **Statistics Sheet**: Intentional redundancy retained - auto-calculated aggregate for performance, refreshed daily at midnight
 
 ---
 
 ## 🚀 Future Enhancements (Not Implemented)
 
 - Write functionality for bookings to Google Sheets
-- Scenario creation form
+- Scenario creation form, validation suite, and new Future tab experience
 - Export/import functionality
 - Email notifications for visa limits
 - Mobile app version

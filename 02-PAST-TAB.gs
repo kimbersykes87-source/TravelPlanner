@@ -1,104 +1,11 @@
 /**
- * Statistics Manager - Manages and calculates travel statistics
- * This script automatically calculates country statistics from RelationshipLog
- * Pre-relationship data is read from PreRelationshipCountries sheet
+ * PAST TAB - Historical Data Processing and Statistics
+ * Functions for processing RelationshipLog, PreRelationshipCountries, and Statistics
  */
 
-// Country name mapping for better matching
-const COUNTRY_NAME_MAPPING = {
-  'United States': 'United States of America',
-  'United States of America': 'United States of America',
-  'US': 'United States of America',
-  'USA': 'United States of America',
-  'America': 'United States of America',
-  'United Kingdom': 'United Kingdom',
-  'UK': 'United Kingdom',
-  'Great Britain': 'United Kingdom',
-  'Britain': 'United Kingdom',
-  'England': 'United Kingdom',
-  'Scotland': 'United Kingdom',
-  'Wales': 'United Kingdom',
-  'Northern Ireland': 'United Kingdom',
-  'South Korea': 'Korea, Republic of',
-  'Republic of Korea': 'Korea, Republic of',
-  'Korea': 'Korea, Republic of',
-  'South Africa': 'South Africa',
-  'Republic of South Africa': 'South Africa',
-  'Czech Republic': 'Czechia',
-  'Czechia': 'Czechia',
-  'Slovakia': 'Slovakia',
-  'Slovak Republic': 'Slovakia',
-  'Netherlands': 'Netherlands',
-  'Holland': 'Netherlands',
-  'United Arab Emirates': 'United Arab Emirates',
-  'UAE': 'United Arab Emirates',
-  'Russia': 'Russian Federation',
-  'Russian Federation': 'Russian Federation',
-  'China': 'China',
-  'People\'s Republic of China': 'China',
-  'Taiwan': 'Taiwan, Province of China',
-  'Republic of China': 'Taiwan, Province of China',
-  'Hong Kong': 'Hong Kong',
-  'Hong Kong SAR': 'Hong Kong',
-  'Kosovo': 'Kosovo',
-  'Republic of Kosovo': 'Kosovo',
-  'North Macedonia': 'North Macedonia',
-  'Republic of North Macedonia': 'North Macedonia',
-  'Macedonia': 'North Macedonia',
-  'Serbia': 'Serbia',
-  'Republic of Serbia': 'Serbia',
-  'Vietnam': 'Viet Nam',
-  'Viet Nam': 'Viet Nam',
-  'Socialist Republic of Vietnam': 'Viet Nam'
-};
-
-const SHEET_NAME_ALIASES = {
-  'RelationshipLog': ['relationship log', 'relationship_log', 'relationship-log'],
-  'PreRelationshipCountries': ['pre relationship countries', 'pre-relationship countries', 'pre_relationship_countries'],
-  'Countries': ['countries master', 'country list', 'countrylist', 'countries (master)'],
-  'Statistics': ['stats', 'statistics sheet'],
-  'BookedUpcoming': ['booked upcoming', 'booked_upcoming', 'booked'],
-  'ToBook': ['to book', 'to_book', 'to-book']
-};
-
-const WRITE_API_TOKEN = 'KIMBER_SIONA_TRAVEL_PLANNER';
-const BOOKED_UPCOMING_SHEET_NAME = 'BookedUpcoming';
-const TO_BOOK_SHEET_NAME = 'ToBook';
-
-function normalizeSheetName(name) {
-  return String(name || '')
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/[_-]+/g, '');
-}
-
-function getSheetByExpectedName(expectedName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const direct = ss.getSheetByName(expectedName);
-  if (direct) return direct;
-
-  const normalizedTargets = [normalizeSheetName(expectedName)];
-  const aliasList = SHEET_NAME_ALIASES[expectedName] || [];
-  aliasList.forEach(alias => normalizedTargets.push(normalizeSheetName(alias)));
-
-  const fallback = ss.getSheets().find(sheet => normalizedTargets.includes(normalizeSheetName(sheet.getName())));
-  if (fallback) {
-    console.log(`ℹ️ Using sheet "${fallback.getName()}" for expected "${expectedName}"`);
-    return fallback;
-  }
-
-  return null;
-}
-
-function normalizeKey_(value) {
-  return value ? value.toString().trim().toLowerCase() : '';
-}
-
-function normalizeYesFlag_(value) {
-  const str = value === null || value === undefined ? '' : value.toString().trim().toLowerCase();
-  return str === 'yes' || str === 'y' || str === 'true' || str === '1';
-}
-
+/**
+ * Build existing statistics map from sheet
+ */
 function buildExistingStatisticsMap_(statsSheet) {
   const map = {};
   if (!statsSheet) return map;
@@ -129,6 +36,9 @@ function buildExistingStatisticsMap_(statsSheet) {
   return map;
 }
 
+/**
+ * Lookup existing statistics entry
+ */
 function lookupExistingStatisticsEntry_(existingMap, name, code) {
   const codeKey = normalizeKey_(code);
   if (codeKey && existingMap[codeKey]) return existingMap[codeKey];
@@ -137,6 +47,9 @@ function lookupExistingStatisticsEntry_(existingMap, name, code) {
   return null;
 }
 
+/**
+ * Build statistics rows from country stats
+ */
 function buildStatisticsRows_(countryStats, existingStatsMap) {
   const entries = Object.values(countryStats).map(country => {
     const existing = lookupExistingStatisticsEntry_(existingStatsMap, country.name, country.code) || {};
@@ -196,29 +109,6 @@ function buildStatisticsRows_(countryStats, existingStatsMap) {
   ]);
 
   return { sheetData, summaryEntries: entries };
-}
-
-/**
- * Normalize country names for matching
- */
-function normalizeCountryName(countryName) {
-  if (!countryName) return '';
-  
-  // First try direct mapping
-  if (COUNTRY_NAME_MAPPING[countryName]) {
-    return COUNTRY_NAME_MAPPING[countryName];
-  }
-  
-  // Try case-insensitive mapping
-  const lowerName = countryName.toLowerCase();
-  for (const [key, value] of Object.entries(COUNTRY_NAME_MAPPING)) {
-    if (key.toLowerCase() === lowerName) {
-      return value;
-    }
-  }
-  
-  // Return original name if no mapping found
-  return countryName;
 }
 
 /**
@@ -328,12 +218,26 @@ function calculateAndPopulateStatistics(statsSheet) {
       
       preRelProcessed++;
       
+      // Normalize country name for better matching
+      const normalizedInput = normalizeCountryName(countryName);
+      
       // Try direct match first (exact column A to column A match)
-      let countryRow = countriesData.find(row => row[0] === countryName);
+      let countryRow = countriesData.find(row => row[0] === countryName || row[0] === normalizedInput);
       
       // If no exact match, try case-insensitive match
       if (!countryRow) {
-        countryRow = countriesData.find(row => row[0].toLowerCase() === countryName.toLowerCase());
+        countryRow = countriesData.find(row => 
+          row[0].toLowerCase() === countryName.toLowerCase() ||
+          row[0].toLowerCase() === normalizedInput.toLowerCase()
+        );
+      }
+      
+      // If still no match, try matching normalized names
+      if (!countryRow) {
+        countryRow = countriesData.find(row => {
+          const normalizedRow = normalizeCountryName(row[0]);
+          return normalizedRow.toLowerCase() === normalizedInput.toLowerCase();
+        });
       }
       
       // If still no match, try partial matching
@@ -390,20 +294,40 @@ function calculateAndPopulateStatistics(statsSheet) {
     
     relLogProcessed++;
     
-    // Find country codes with direct matching
+    // Find country codes with improved matching using normalization
     let kimberRow = null;
     if (kimberCountry) {
-      kimberRow = countriesData.find(row => row[0] === kimberCountry);
+      const normalizedKimber = normalizeCountryName(kimberCountry);
+      kimberRow = countriesData.find(row => row[0] === kimberCountry || row[0] === normalizedKimber);
       if (!kimberRow) {
-        kimberRow = countriesData.find(row => row[0].toLowerCase() === kimberCountry.toLowerCase());
+        kimberRow = countriesData.find(row => 
+          row[0].toLowerCase() === kimberCountry.toLowerCase() ||
+          row[0].toLowerCase() === normalizedKimber.toLowerCase()
+        );
+      }
+      if (!kimberRow) {
+        kimberRow = countriesData.find(row => {
+          const normalizedRow = normalizeCountryName(row[0]);
+          return normalizedRow.toLowerCase() === normalizedKimber.toLowerCase();
+        });
       }
     }
     
     let sionaRow = null;
     if (sionaCountry) {
-      sionaRow = countriesData.find(row => row[0] === sionaCountry);
+      const normalizedSiona = normalizeCountryName(sionaCountry);
+      sionaRow = countriesData.find(row => row[0] === sionaCountry || row[0] === normalizedSiona);
       if (!sionaRow) {
-        sionaRow = countriesData.find(row => row[0].toLowerCase() === sionaCountry.toLowerCase());
+        sionaRow = countriesData.find(row => 
+          row[0].toLowerCase() === sionaCountry.toLowerCase() ||
+          row[0].toLowerCase() === normalizedSiona.toLowerCase()
+        );
+      }
+      if (!sionaRow) {
+        sionaRow = countriesData.find(row => {
+          const normalizedRow = normalizeCountryName(row[0]);
+          return normalizedRow.toLowerCase() === normalizedSiona.toLowerCase();
+        });
       }
     }
     
@@ -607,12 +531,26 @@ function incrementalRefreshStatistics() {
         const [profileId, countryName, visitedBefore] = preRelData[i];
         if (countryName === 'CountryName') continue; // Skip header
         
-        // Try direct match first
-        let countryRow = countriesData.find(row => row[0] === countryName);
+        // Normalize country name for better matching
+        const normalizedInput = normalizeCountryName(countryName);
+        
+        // Try direct match first (exact column A to column A match)
+        let countryRow = countriesData.find(row => row[0] === countryName || row[0] === normalizedInput);
         
         // If no exact match, try case-insensitive match
         if (!countryRow) {
-          countryRow = countriesData.find(row => row[0].toLowerCase() === countryName.toLowerCase());
+          countryRow = countriesData.find(row => 
+            row[0].toLowerCase() === countryName.toLowerCase() ||
+            row[0].toLowerCase() === normalizedInput.toLowerCase()
+          );
+        }
+        
+        // If still no match, try matching normalized names
+        if (!countryRow) {
+          countryRow = countriesData.find(row => {
+            const normalizedRow = normalizeCountryName(row[0]);
+            return normalizedRow.toLowerCase() === normalizedInput.toLowerCase();
+          });
         }
         
         // If still no match, try partial matching
@@ -655,20 +593,40 @@ function incrementalRefreshStatistics() {
       
       processedEntries++;
       
-      // Find country codes with direct matching
+      // Find country codes with improved matching using normalization
       let kimberRow = null;
       if (kimberCountry) {
-        kimberRow = countriesData.find(row => row[0] === kimberCountry);
+        const normalizedKimber = normalizeCountryName(kimberCountry);
+        kimberRow = countriesData.find(row => row[0] === kimberCountry || row[0] === normalizedKimber);
         if (!kimberRow) {
-          kimberRow = countriesData.find(row => row[0].toLowerCase() === kimberCountry.toLowerCase());
+          kimberRow = countriesData.find(row => 
+            row[0].toLowerCase() === kimberCountry.toLowerCase() ||
+            row[0].toLowerCase() === normalizedKimber.toLowerCase()
+          );
+        }
+        if (!kimberRow) {
+          kimberRow = countriesData.find(row => {
+            const normalizedRow = normalizeCountryName(row[0]);
+            return normalizedRow.toLowerCase() === normalizedKimber.toLowerCase();
+          });
         }
       }
       
       let sionaRow = null;
       if (sionaCountry) {
-        sionaRow = countriesData.find(row => row[0] === sionaCountry);
+        const normalizedSiona = normalizeCountryName(sionaCountry);
+        sionaRow = countriesData.find(row => row[0] === sionaCountry || row[0] === normalizedSiona);
         if (!sionaRow) {
-          sionaRow = countriesData.find(row => row[0].toLowerCase() === sionaCountry.toLowerCase());
+          sionaRow = countriesData.find(row => 
+            row[0].toLowerCase() === sionaCountry.toLowerCase() ||
+            row[0].toLowerCase() === normalizedSiona.toLowerCase()
+          );
+        }
+        if (!sionaRow) {
+          sionaRow = countriesData.find(row => {
+            const normalizedRow = normalizeCountryName(row[0]);
+            return normalizedRow.toLowerCase() === normalizedSiona.toLowerCase();
+          });
         }
       }
       
@@ -903,267 +861,128 @@ function addSummarySection(statsSheet, countryStats) {
 }
 
 /**
- * Webhook entry point for write operations (bookings, task updates)
+ * Load RelationshipLog data
  */
-function doPost(e) {
-  if (!e || !e.parameter) {
-    return createJsonResponse_({ success: false, error: 'No request data supplied.' });
+function loadRelationshipLog_() {
+  const sheet = getSheetByExpectedName('RelationshipLog');
+  if (!sheet) return [];
+  return sheet.getDataRange().getValues();
+}
+
+/**
+ * Build history entries for a profile
+ */
+function buildHistoryEntries_(profileId) {
+  const rows = loadRelationshipLog_();
+  const index = profileId === 'siona' ? 2 : 1;
+  const entries = [];
+  for (let i = 1; i < rows.length; i++) {
+    const dateIso = sanitizeISODate_(rows[i][0]);
+    const country = sanitizeString_(rows[i][index]);
+    if (!dateIso || !country) continue;
+    const dayNumber = getDayNumber_(dateIso);
+    if (!isFinite(dayNumber)) continue;
+    entries.push({ date: dateIso, dayNumber, country, source: 'history' });
   }
-
-  return handleWriteApiRequest_(e);
+  entries.sort((a, b) => a.dayNumber - b.dayNumber);
+  return entries;
 }
 
-function handleWriteApiRequest_(e) {
-  try {
-    if (!isWriteApiConfigured_()) {
-      throw new Error('Write API token not configured.');
-    }
-
-    const params = e.parameter;
-    const token = params.token || '';
-    if (token !== WRITE_API_TOKEN) {
-      return createJsonResponse_({ success: false, error: 'Unauthorized request.' });
-    }
-
-    const action = params.action || '';
-    switch (action) {
-      case 'addBooked': {
-        const bookingPayload = params.booking ? JSON.parse(params.booking) : null;
-        if (!bookingPayload) {
-          return createJsonResponse_({ success: false, error: 'Missing booking payload.' });
-        }
-        const sourceTaskId = params.sourceTaskId || '';
-        const result = addBookedUpcomingEntry_(bookingPayload, sourceTaskId);
-        return createJsonResponse_(Object.assign({ success: true }, result));
-      }
-    case 'upsertToBook': {
-      const toBookPayload = params.toBook ? JSON.parse(params.toBook) : null;
-      if (!toBookPayload) {
-        return createJsonResponse_({ success: false, error: 'Missing To Book payload.' });
-      }
-      const result = upsertToBookEntry_(toBookPayload);
-      return createJsonResponse_(Object.assign({ success: true }, result));
-    }
-      case 'upsertBooked': {
-        const bookingPayload = params.booking ? JSON.parse(params.booking) : null;
-        if (!bookingPayload) {
-          return createJsonResponse_({ success: false, error: 'Missing booking payload.' });
-        }
-        const sourceTaskId = params.sourceTaskId || '';
-        const result = upsertBookedUpcomingEntry_(bookingPayload, sourceTaskId);
-        return createJsonResponse_(Object.assign({ success: true }, result));
-      }
-      case 'deleteBooked': {
-        const bookingId = params.bookingId || '';
-        if (!bookingId) {
-          return createJsonResponse_({ success: false, error: 'Missing bookingId parameter.' });
-        }
-        const deleted = deleteBookedUpcomingEntry_(bookingId);
-        return createJsonResponse_({ success: deleted, bookingId });
-      }
-      default:
-        return createJsonResponse_({ success: false, error: `Unknown action "${action}".` });
-    }
-  } catch (error) {
-    console.error('Write API error:', error);
-    return createJsonResponse_({ success: false, error: error.message || String(error) });
-  }
-}
-
-function addBookedUpcomingEntry_(payload, sourceTaskId) {
-  return upsertBookedUpcomingEntry_(payload, sourceTaskId);
-}
-
-function sanitizeBookingPayload_(payload) {
-  const nowIso = new Date().toISOString();
-  return {
-    bookingId: sanitizeString_(payload.bookingId) || generateBookingId_(),
-    bookingType: sanitizeString_(payload.bookingType),
-    headline: sanitizeString_(payload.headline),
-    details: sanitizeString_(payload.details),
-    startDate: sanitizeString_(payload.startDate),
-    endDate: sanitizeString_(payload.endDate),
-    travellers: sanitizeString_(payload.travellers),
-    confirmationData: sanitizeString_(payload.confirmationData),
-    notes: sanitizeString_(payload.notes),
-    createdFromTask: sanitizeString_(payload.createdFromTask),
-    createdAt: sanitizeString_(payload.createdAt) || nowIso,
-    updatedAt: sanitizeString_(payload.updatedAt) || nowIso
+/**
+ * Build historical visa day numbers by jurisdiction
+ */
+function buildHistoricalVisaDayNumbers_(profileId) {
+  const rows = loadRelationshipLog_();
+  const index = profileId === 'siona' ? 2 : 1;
+  const map = {
+    US: [],
+    UK: [],
+    SCHENGEN: []
   };
+
+  for (let i = 1; i < rows.length; i++) {
+    const [dateValue] = rows[i];
+    const country = rows[i][index];
+    const iso = sanitizeISODate_(dateValue);
+    const jurisdiction = getJurisdictionForCountry_(country);
+    if (!iso || !jurisdiction) continue;
+    const dayNumber = getDayNumber_(iso);
+    if (!isFinite(dayNumber)) continue;
+    if (!map[jurisdiction]) {
+      map[jurisdiction] = [];
+    }
+    map[jurisdiction].push(dayNumber);
+  }
+
+  Object.keys(map).forEach(key => {
+    map[key].sort((a, b) => a - b);
+  });
+
+  return map;
 }
 
-function sanitizeString_(value) {
-  if (value === null || value === undefined) return '';
-  return String(value).trim();
+/**
+ * Get tax year start day (UK tax year starts April 6)
+ */
+function getTaxYearStartDay_(dayNumber) {
+  const date = dayNumberToDate_(dayNumber);
+  const year = date.getFullYear();
+  const taxYearStart = new Date(year, 3, 6); // April 6
+  taxYearStart.setHours(0, 0, 0, 0);
+  const taxYearStartDay = getDayNumberFromDate_(taxYearStart);
+  if (dayNumber >= taxYearStartDay) {
+    return taxYearStartDay;
+  }
+  const prevStart = new Date(year - 1, 3, 6);
+  prevStart.setHours(0, 0, 0, 0);
+  return getDayNumberFromDate_(prevStart);
 }
 
-function generateBookingId_() {
-  return 'BK-' + Utilities.getUuid().replace(/[^A-Z0-9]/gi, '').slice(0, 8).toUpperCase();
-}
+/**
+ * Analyze UK tax year (120 days per tax year)
+ */
+function analyzeUKTax_(dayNumbers, limit) {
+  const countsByDay = new Map();
+  let maxCount = 0;
+  let violationDay = null;
+  const maxCountByTaxYear = new Map(); // Track max per tax year
 
-function updateToBookStatus_(taskId, status, updatedAt) {
-  if (!taskId) return false;
-  const sheet = getSheetByExpectedName(TO_BOOK_SHEET_NAME);
-  if (!sheet) return false;
-
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    const currentId = (data[i][0] || '').toString().trim();
-    if (currentId && currentId === taskId.toString().trim()) {
-      sheet.getRange(i + 1, 9).setValue(status);
-      sheet.getRange(i + 1, 11).setValue(updatedAt);
-      return true;
+  for (let i = 0; i < dayNumbers.length; i++) {
+    const currentDay = dayNumbers[i];
+    const taxYearStart = getTaxYearStartDay_(currentDay);
+    let count = 0;
+    for (let j = i; j >= 0; j--) {
+      if (dayNumbers[j] < taxYearStart) {
+        break;
+      }
+      count++;
+    }
+    countsByDay.set(currentDay, count);
+    
+    // Track maximum per tax year (reset per tax year)
+    const currentMax = maxCountByTaxYear.get(taxYearStart) || 0;
+    if (count > currentMax) {
+      maxCountByTaxYear.set(taxYearStart, count);
+    }
+    
+    if (violationDay === null && count > limit) {
+      violationDay = currentDay;
     }
   }
-  return false;
-}
 
-function upsertToBookEntry_(payload) {
-  const sanitized = sanitizeToBookPayload_(payload || {});
-  const sheet = getSheetByExpectedName(TO_BOOK_SHEET_NAME);
-  if (!sheet) {
-    throw new Error(`Sheet "${TO_BOOK_SHEET_NAME}" not found.`);
-  }
-
-  const data = sheet.getDataRange().getValues();
-  let targetRowIndex = -1;
-  for (let i = 1; i < data.length; i++) {
-    const currentId = (data[i][0] || '').toString().trim();
-    if (currentId && currentId === sanitized.taskId) {
-      targetRowIndex = i + 1; // sheets are 1-based
-      break;
-    }
-  }
-
-  const values = [
-    sanitized.taskId,
-    sanitized.assignee,
-    sanitized.bookingType,
-    sanitized.startDate,
-    sanitized.endDate,
-    sanitized.instruction,
-    sanitized.deadline,
-    sanitized.notes,
-    sanitized.status,
-    sanitized.createdAt,
-    sanitized.updatedAt
-  ];
-
-  if (targetRowIndex === -1) {
-    sheet.appendRow(values);
-    targetRowIndex = sheet.getLastRow();
-  } else {
-    sheet.getRange(targetRowIndex, 1, 1, values.length).setValues([values]);
-  }
+  // maxCount should be the maximum across all tax years (for violation detection)
+  // But for "remaining" calculation, we need the current tax year's count
+  // Since the function is used for both baseline and projected, we'll return
+  // the maximum across all tax years, but the caller should use countsByDay
+  // for the current tax year's count when calculating remaining days
+  maxCount = Math.max(...Array.from(maxCountByTaxYear.values()), 0);
 
   return {
-    toBook: sanitized,
-    rowIndex: targetRowIndex
+    countsByDay,
+    maxCount,
+    violationDay,
+    maxCountByTaxYear // Expose per-tax-year maxes for remaining day calculations
   };
 }
-
-function upsertBookedUpcomingEntry_(payload, sourceTaskId) {
-  const sanitized = sanitizeBookingPayload_(payload || {});
-  const sheet = getSheetByExpectedName(BOOKED_UPCOMING_SHEET_NAME);
-  if (!sheet) {
-    throw new Error(`Sheet "${BOOKED_UPCOMING_SHEET_NAME}" not found.`);
-  }
-
-  const data = sheet.getDataRange().getValues();
-  let targetRowIndex = -1;
-  for (let i = 1; i < data.length; i++) {
-    const currentId = (data[i][0] || '').toString().trim();
-    if (currentId && currentId === sanitized.bookingId) {
-      targetRowIndex = i + 1;
-      break;
-    }
-  }
-
-  const values = [
-    sanitized.bookingId,
-    sanitized.bookingType,
-    sanitized.headline,
-    sanitized.details,
-    sanitized.startDate,
-    sanitized.endDate,
-    sanitized.travellers,
-    sanitized.confirmationData,
-    sanitized.notes,
-    sanitized.createdFromTask,
-    sanitized.createdAt,
-    sanitized.updatedAt
-  ];
-
-  if (targetRowIndex === -1) {
-    sheet.appendRow(values);
-    targetRowIndex = sheet.getLastRow();
-  } else {
-    sheet.getRange(targetRowIndex, 1, 1, values.length).setValues([values]);
-  }
-
-  let toBookUpdated = false;
-  if (sourceTaskId) {
-    toBookUpdated = updateToBookStatus_(sourceTaskId, 'converted', sanitized.updatedAt);
-  }
-
-  return {
-    booking: sanitized,
-    rowIndex: targetRowIndex,
-    toBookUpdated
-  };
-}
-
-function deleteBookedUpcomingEntry_(bookingId) {
-  const sheet = getSheetByExpectedName(BOOKED_UPCOMING_SHEET_NAME);
-  if (!sheet) {
-    throw new Error(`Sheet "${BOOKED_UPCOMING_SHEET_NAME}" not found.`);
-  }
-
-  const data = sheet.getDataRange().getValues();
-  for (let i = 1; i < data.length; i++) {
-    const currentId = (data[i][0] || '').toString().trim();
-    if (currentId && currentId === bookingId) {
-      sheet.deleteRow(i + 1);
-      return true;
-    }
-  }
-  return false;
-}
-
-function sanitizeToBookPayload_(payload) {
-  const nowIso = new Date().toISOString();
-  const taskId = sanitizeString_(payload.taskId) || generateTaskId_();
-  const createdAt = sanitizeString_(payload.createdAt) || nowIso;
-
-  return {
-    taskId,
-    assignee: sanitizeString_(payload.assignee),
-    bookingType: sanitizeString_(payload.bookingType),
-    startDate: sanitizeString_(payload.startDate),
-    endDate: sanitizeString_(payload.endDate),
-    instruction: sanitizeString_(payload.instruction),
-    deadline: sanitizeString_(payload.deadline),
-    notes: sanitizeString_(payload.notes),
-    status: sanitizeString_(payload.status) || 'pending',
-    createdAt,
-    updatedAt: sanitizeString_(payload.updatedAt) || nowIso
-  };
-}
-
-function generateTaskId_() {
-  return 'TB-' + Utilities.getUuid().replace(/[^A-Z0-9]/gi, '').slice(0, 8).toUpperCase();
-}
-
-function createJsonResponse_(payload) {
-  return ContentService
-    .createTextOutput(JSON.stringify(payload || {}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function isWriteApiConfigured_() {
-  return WRITE_API_TOKEN && WRITE_API_TOKEN !== 'REPLACE_WITH_SECURE_TOKEN';
-}
-
-
 
 

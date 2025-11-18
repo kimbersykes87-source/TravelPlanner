@@ -137,5 +137,14 @@ The application reads from the following Google Sheets:
 
 ---
 
-**Version**: 2.0 (Cloudflare Pages Deployment)  
+## 🔐 Security
+
+The application is protected by password authentication:
+- **Password Required**: Users must enter the correct password to access the site
+- **Session-based**: Authentication persists for the browser session
+- **Password**: Set in `js/00-all-tabs.js` (CORRECT_PASSWORD constant)
+
+---
+
+**Version**: 2.1 (Password Protection Added)  
 **Last Updated**: 2025-11-18

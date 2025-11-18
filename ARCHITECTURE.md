@@ -1,7 +1,7 @@
 # Travel Planner - System Architecture
 
 **Last Updated**: 2025-11-18  
-**Status**: Production deployment on Cloudflare Pages
+**Status**: Production deployment on Cloudflare Pages (with password protection)
 
 ---
 
@@ -176,6 +176,20 @@ The application reads from these Google Sheets:
 ---
 
 ## 🔐 Security & Configuration
+
+### Password Protection
+
+- **Method**: Client-side password authentication via `sessionStorage`
+- **Password**: Set in `js/00-all-tabs.js` as `CORRECT_PASSWORD` constant
+- **Default Password**: `betterthanlego2026!`
+- **Session-based**: Authentication persists for browser session (clears when tab closed)
+- **Implementation**: Password screen (`#passwordScreen`) blocks access until correct password entered
+- **Location**: Password check in `js/00-all-tabs.js` (`checkAuthentication()` and `handlePasswordSubmit()`)
+
+**To change password**:
+1. Update `CORRECT_PASSWORD` constant in `js/00-all-tabs.js`
+2. Commit and push
+3. Cloudflare Pages will redeploy automatically
 
 ### Read Access (Cloudflare Pages Function)
 

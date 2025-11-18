@@ -2,21 +2,21 @@
 
 A comprehensive travel planning and tracking application for managing digital nomad lifestyle, visa tracking, and travel history.
 
+## 🌐 Live Site
+
+**Production URL**: https://travelplanner-ks.pages.dev/
+
+The application is deployed on Cloudflare Pages and automatically updates when changes are pushed to the `feat/globe-loader` branch.
+
 ## 🚀 Quick Start
 
-### Running the Application
+### Running Locally (Development)
 
-**Option 1: Direct File Opening**
-1. Right-click on `digital-nomad-planner.html`
-2. Select "Open with" → Your web browser
-3. The app will automatically load data from Google Sheets
-
-**Option 2: Local Server (Recommended)**
 1. Open terminal in project directory
 2. Run: `python -m http.server 8000`
 3. Open browser to: `http://localhost:8000/digital-nomad-planner.html`
 
-**Note**: Option 2 bypasses CORS restrictions and is recommended for development.
+**Note**: Local development uses CORS proxy fallback. Production uses Cloudflare Pages Function for faster data loading.
 
 ## 📱 Application Features
 
@@ -46,11 +46,13 @@ A comprehensive travel planning and tracking application for managing digital no
 
 ## 🛠️ Technical Stack
 
+- **Hosting**: Cloudflare Pages (production deployment)
 - **Frontend**: Single-page HTML application (4,337 lines)
 - **Maps**: Leaflet.js with OpenStreetMap
-- **Data Source**: Google Sheets (CSV export via API)
+- **Data Source**: Google Sheets (via Cloudflare Pages Function)
+- **Write API**: Google Apps Script Web App
 - **Animations**: Lottie Player
-- **Backend Scripts**: Google Apps Script for statistics management
+- **Backend Scripts**: Google Apps Script for statistics management and write operations
 
 ## 📊 Data Structure
 
@@ -63,57 +65,77 @@ The application reads from the following Google Sheets:
 - **PresentBookings**: Current travel bookings
 - **FutureScenarios**: Planned future travel scenarios
 
-## 🔧 Setup & Configuration
+## 🔧 Configuration
 
 ### Google Sheets
 - **Spreadsheet ID**: `1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8`
-- **API Key**: Hardcoded in HTML (for public read access)
+- **Read Access**: Via Cloudflare Pages Function (`/api/sheets`)
+- **Write Access**: Via Google Apps Script Web App
 - **Statistics Refresh**: Runs automatically at midnight via Apps Script trigger
+
+### Cloudflare Pages
+- **Project**: `travelplanner-ks`
+- **Branch**: `feat/globe-loader` (auto-deploys on push)
+- **Function**: `functions/api/sheets.js` (serverless read API)
 
 ### Apps Script Files
 1. **`statistics-manager.gs`**: Manages Statistics sheet calculations and midnight refresh
 2. **`create-travel-planner-sheet.gs`**: Initial spreadsheet setup (run once)
+3. **Write API handlers** (in Apps Script project): Handle POST requests for creating/updating/deleting bookings, scenarios, etc.
 
 ## 🔄 Automatic Updates
 
 - **Statistics Sheet**: Refreshes daily at midnight (00:00)
 - **Today's Row Highlight**: Automatically highlights today's date in RelationshipLog
 - **Manual Refresh**: Run `incrementalRefreshStatistics()` in Apps Script anytime
+- **Site Deployment**: Automatically deploys when changes are pushed to `feat/globe-loader` branch
 
 ## 📖 Documentation
 
-- **`APPLICATION_SUMMARY.md`**: Comprehensive application documentation
+- **`ARCHITECTURE.md`**: Complete system architecture and deployment guide
+- **`APPLICATION_SUMMARY.md`**: Application features and data structure
+- **`STARTUP_PROCEDURE.md`**: Local development setup
 - See inline code comments for detailed function documentation
 
 ## 🔧 Troubleshooting
 
-### CORS Errors
-- Use local server method (Option 2) instead of opening file directly
-
 ### Data Not Loading
-- Check browser console for error messages
+- Check browser console (F12) for error messages
+- Look for: `"✅ Data loaded via Cloudflare Pages API"` (success)
+- Test API directly: Visit `https://travelplanner-ks.pages.dev/api/sheets`
 - Verify internet connection
-- Ensure Google Sheets API key is valid
 - Try refreshing the page
+
+### Write Operations Failing
+- Check browser console for error messages
+- Verify write API configuration in `js/00-all-tabs.js`
+- Ensure Google Apps Script web app is active
+
+### Changes Not Appearing on Live Site
+- Wait 1-3 minutes after pushing to GitHub (deployment time)
+- Check Cloudflare Dashboard → Pages → Latest deployment status
+- Hard refresh browser (Ctrl+F5)
 
 ### Profile Images Not Loading
 - This is normal - app shows placeholder images instead
 - Images are hosted on GitHub and may have loading delays
 
-## ⚠️ Known Limitations
+## ✨ Features
 
-- **Booking Persistence**: Present tab bookings are local only (not saved to Sheets)
-- **Scenario Creation**: Future tab creation form is placeholder only
-- **Data Write**: App is read-only (no write functionality to Sheets)
-- **CORS**: Relies on proxy services (may fail if proxies are down)
+- **Full CRUD Operations**: Create, read, update, and delete bookings, scenarios, and tasks
+- **Real-time Sync**: Changes saved directly to Google Sheets via Apps Script API
+- **Fast Data Loading**: Single API call via Cloudflare Pages Function (instead of 11 separate requests)
+- **Offline Fallback**: Falls back to CORS proxy if Cloudflare function unavailable
 
 ## 📞 Resources
 
+- **Live Site**: https://travelplanner-ks.pages.dev/
+- **Cloudflare Dashboard**: https://dash.cloudflare.com/pages/view/travelplanner-ks
 - **GitHub Repository**: https://github.com/kimbersykes87-source/TravelPlanner
 - **Google Sheets**: https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit
-- **Local Server**: http://localhost:8000/digital-nomad-planner.html
+- **Apps Script Project**: https://script.google.com/u/0/home/projects/1-SddHsWBT2lhkUc8ZCbh7CA5YaaqxcQuzp9RTBKx3czs3RvFBIT40o93/edit
 
 ---
 
-**Version**: 1.0 (Production Ready)  
-**Last Updated**: 2025-01-16
+**Version**: 2.0 (Cloudflare Pages Deployment)  
+**Last Updated**: 2025-11-18

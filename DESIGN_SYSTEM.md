@@ -341,3 +341,4 @@ Potential additions to the design system:
 *Maintained in: `digital-nomad-planner.html` (CSS variables section)*
 
 
+

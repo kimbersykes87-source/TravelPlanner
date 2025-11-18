@@ -1,7 +1,7 @@
 # Fionas Kimberinho - Travel Planner Application Summary
 
-**Last Updated**: 2025-01-16  
-**Status**: Fully Functional Production Application
+**Last Updated**: 2025-11-18  
+**Status**: Fully Functional Production Application (Deployed on Cloudflare Pages)
 
 ---
 
@@ -31,12 +31,19 @@
 
 ### Backend (Google Sheets)
 - **Spreadsheet ID**: `1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8`
-- **Data Loading**: CSV export via Google Sheets API with CORS proxy fallbacks
-- **API Key**: `AIzaSyC-gqtpKGeG1c9AVMWWrVKbcS60XWlm9zk` (hardcoded in HTML)
+- **Data Loading**: Via Cloudflare Pages Function (`/api/sheets`) - single aggregated API call
+- **Write Access**: Via Google Apps Script Web App (POST requests)
+- **Fallback**: CORS proxy if Cloudflare function unavailable
+
+### Deployment
+- **Hosting**: Cloudflare Pages (`travelplanner-ks.pages.dev`)
+- **Branch**: `feat/globe-loader` (auto-deploys on push)
+- **Function**: `functions/api/sheets.js` (serverless read API)
 
 ### Google Apps Script Files
 1. **`statistics-manager.gs`** - Manages Statistics sheet calculations and midnight refresh
 2. **`create-travel-planner-sheet.gs`** - Initial spreadsheet setup and sheet creation
+3. **Write API handlers** - Handle POST requests for creating/updating/deleting bookings, scenarios, etc.
 
 ---
 

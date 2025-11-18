@@ -250,8 +250,11 @@ The application reads from these Google Sheets:
 ## 📝 Key Files Reference
 
 ### Core Application
-- `digital-nomad-planner.html` - Main application (4,337 lines)
+- `digital-nomad-planner.html` - Main application (includes password protection screen)
 - `index.html` - Root redirect
+
+### Authentication
+- `js/00-all-tabs.js` - Password protection: `checkAuthentication()`, `handlePasswordSubmit()`, `initializeAppAfterAuth()`
 
 ### Data Loading
 - `functions/api/sheets.js` - Cloudflare Pages Function (reads from Sheets)

@@ -345,13 +345,13 @@ async function loadCountryBorders(visitedCountries, targetMap = worldMap, option
         logger.debug('🔍 ISO3 Set:', Array.from(iso3Set).sort());
         logger.debug('🔍 ISO2 Set:', Array.from(iso2Set).sort());
         logger.debug('🔍 Checking for USA, SRB, VNM in sets:', {
-            'USA in iso3Set': iso3Set.has('USA'),
-            'SRB in iso3Set': iso3Set.has('SRB'),
-            'VNM in iso3Set': iso3Set.has('VNM'),
-            'US in iso2Set': iso2Set.has('US'),
-            'RS in iso2Set': iso2Set.has('RS'),
-            'VN in iso2Set': iso2Set.has('VN')
-        });
+        'USA in iso3Set': iso3Set.has('USA'),
+        'SRB in iso3Set': iso3Set.has('SRB'),
+        'VNM in iso3Set': iso3Set.has('VNM'),
+        'US in iso2Set': iso2Set.has('US'),
+        'RS in iso2Set': iso2Set.has('RS'),
+        'VN in iso2Set': iso2Set.has('VN')
+    });
     }
 
     const countryTypes = {};
@@ -384,12 +384,12 @@ async function loadCountryBorders(visitedCountries, targetMap = worldMap, option
         logger.debug('Countries to display:', visitedEntries.map(entry => entry.canonicalName));
         logger.debug('Country types breakdown:', visitedCountries);
         logger.debug('Countries sheet data:', currentData.countries ? currentData.countries.length + ' countries loaded' : 'NOT LOADED');
-        
-        if (currentData.countries && currentData.countries.length > 0) {
+    
+    if (currentData.countries && currentData.countries.length > 0) {
             logger.debug('First few countries from sheet:', currentData.countries.slice(0, 3));
-        }
-        
-        // Show some examples of what's in countryTypes
+    }
+    
+    // Show some examples of what's in countryTypes
         logger.debug('Sample countryTypes entries:', Object.entries(countryTypes).slice(0, 5));
     }
     
@@ -1560,10 +1560,10 @@ function createPreRelationshipTimeline() {
     
     if (DEBUG_MODE) {
         logger.debug('🏗️ Creating tiles with counts:', {
-            together: togetherCountries.length,
-            kimber: kimberCountries.length,
-            siona: sionaCountries.length
-        });
+        together: togetherCountries.length,
+        kimber: kimberCountries.length,
+        siona: sionaCountries.length
+    });
     }
     
     // Create tiles in the specified order

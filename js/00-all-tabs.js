@@ -1,3 +1,69 @@
+// Password protection
+const PASSWORD_KEY = 'travelPlanner_authenticated';
+const CORRECT_PASSWORD = 'betterthanlego2026!';
+
+// Check if user is already authenticated
+function checkAuthentication() {
+    const isAuthenticated = sessionStorage.getItem(PASSWORD_KEY) === 'true';
+    const passwordScreen = document.getElementById('passwordScreen');
+    const container = document.querySelector('.container');
+    
+    if (!isAuthenticated) {
+        if (passwordScreen) passwordScreen.classList.remove('hidden');
+        if (container) container.style.display = 'none';
+        return false;
+    } else {
+        if (passwordScreen) passwordScreen.classList.add('hidden');
+        if (container) container.style.display = '';
+        return true;
+    }
+}
+
+// Handle password form submission
+function handlePasswordSubmit(event) {
+    event.preventDefault();
+    const passwordInput = document.getElementById('passwordInput');
+    const passwordError = document.getElementById('passwordError');
+    const password = passwordInput.value.trim();
+    
+    if (password === CORRECT_PASSWORD) {
+        sessionStorage.setItem(PASSWORD_KEY, 'true');
+        passwordError.textContent = '';
+        passwordInput.value = '';
+        checkAuthentication();
+        // Initialize app after successful authentication
+        initializeAppAfterAuth();
+    } else {
+        passwordError.textContent = 'Incorrect password. Please try again.';
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
+}
+
+// Initialize application after authentication
+function initializeAppAfterAuth() {
+    resetToBookFormState();
+
+    const typeSelect = document.getElementById('toBookType');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateToBookTypeHint);
+    }
+    
+    // Initialize calendar shell if elements already exist
+    if (document.getElementById('calendarGrid')) {
+        updateCalendar();
+    }
+    
+    // Auto-load data after a short delay
+    setTimeout(() => {
+        loadData();
+    }, 1000);
+}
+
+// Make functions available globally
+window.handlePasswordSubmit = handlePasswordSubmit;
+window.checkAuthentication = checkAuthentication;
+
 // Global variables
 // Production mode detection - set to false for verbose debug logging
 const IS_PRODUCTION = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -146,23 +212,17 @@ const scenarioRatingTimers = new Map();
 const SCENARIO_RATING_SAVE_DELAY = 30000;
 
 // Initialize the application
+// Check authentication on page load (after DOM is ready)
 document.addEventListener('DOMContentLoaded', function() {
-    resetToBookFormState();
-
-    const typeSelect = document.getElementById('toBookType');
-    if (typeSelect) {
-        typeSelect.addEventListener('change', updateToBookTypeHint);
+    if (!checkAuthentication()) {
+        // Don't proceed with app initialization if not authenticated
+        const passwordInput = document.getElementById('passwordInput');
+        if (passwordInput) passwordInput.focus();
+        return; // Exit early, don't initialize app
     }
     
-    // Initialize calendar shell if elements already exist
-    if (document.getElementById('calendarGrid')) {
-    updateCalendar();
-    }
-    
-    // Auto-load data after a short delay
-    setTimeout(() => {
-        loadData();
-    }, 1000);
+    // User is authenticated, proceed with normal app initialization
+    initializeAppAfterAuth();
 });
 
 window.addEventListener('beforeunload', () => {

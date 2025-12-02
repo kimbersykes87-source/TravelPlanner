@@ -20,6 +20,11 @@ The application is deployed on Cloudflare Pages and automatically updates when c
 
 ## 📱 Application Features
 
+### Navigation
+- **Fixed Top Navigation Bar**: Persistent 36px navigation bar with quick access to all main tabs (Us, Past, Present, Future)
+- **Centered Logo & Title**: "FIONAS KIMBERINHO" logo and title displayed above navigation bar
+- **Mobile-Responsive**: Optimized spacing and layout for mobile devices
+
 ### Us Tab - Profiles & Visa Tracking
 - Dual profile system (Kimber & Siona)
 - Passport and visa information
@@ -33,16 +38,26 @@ The application is deployed on Cloudflare Pages and automatically updates when c
 ### Past Tab - Travel History
 - Interactive world map with country visit visualization
 - Relationship timeline from September 30, 2023
+- **Google Photos Integration**: Timeline entries can include Google Photos album links with thumbnails
 - Color-coded countries by visit type (together, separate, individual)
 
 ### Present Tab - Current Bookings
 - Booking management form
 - Calendar view with travel indicators
 - Track accommodations, transport, and activities
+- **Delete Functionality**: Delete booking requests from database (replaces previous archive feature)
 
 ### Future Tab - Scenario Planning
 - View and plan future travel scenarios
 - Grouped scenario display with together/separate periods
+- **Scenario Stay Images**: Optional image URLs for each scenario stay with thumbnail display
+- **Scenario Export**: Single-page PDF export optimized for A4/Letter printing
+- **Bucket List Feature**:
+  - Sub-tab under Future tab for managing bucket list items
+  - Track items by user (Kimber/Siona), country, icon, description, and notes
+  - Optional image thumbnails for bucket list items
+  - Completion tracking with automatic relationship log entry creation
+  - Color-coded items by user (Kimber: blue, Siona: red)
 
 ## 🛠️ Technical Stack
 
@@ -59,11 +74,13 @@ The application is deployed on Cloudflare Pages and automatically updates when c
 The application reads from the following Google Sheets:
 - **Profiles**: Personal information, passports, visas, frequent flyer
 - **Countries**: Master country list with standardized names
-- **RelationshipLog**: Daily travel log from Sept 30, 2023
+- **RelationshipLog**: Daily travel log from Sept 30, 2023 (includes optional Google Photos album URLs)
 - **PreRelationshipCountries**: Countries visited before relationship
 - **Statistics**: Auto-calculated country statistics (refreshed daily)
 - **PresentBookings**: Current travel bookings
 - **FutureScenarios**: Planned future travel scenarios
+- **ScenarioStays**: Individual stays within scenarios (includes optional image URLs)
+- **BucketList**: Bucket list items with completion tracking
 
 ## 🔧 Configuration
 
@@ -122,10 +139,13 @@ The application reads from the following Google Sheets:
 
 ## ✨ Features
 
-- **Full CRUD Operations**: Create, read, update, and delete bookings, scenarios, and tasks
+- **Full CRUD Operations**: Create, read, update, and delete bookings, scenarios, tasks, and bucket list items
 - **Real-time Sync**: Changes saved directly to Google Sheets via Apps Script API
 - **Fast Data Loading**: Single API call via Cloudflare Pages Function (instead of 11 separate requests)
 - **Offline Fallback**: Falls back to CORS proxy if Cloudflare function unavailable
+- **Mobile-First Design**: Responsive layout optimized for mobile devices with consistent spacing and typography
+- **Visual Content**: Support for Google Photos album links and scenario stay images
+- **Export Functionality**: PDF export for scenarios with print-optimized layout
 
 ## 📞 Resources
 
@@ -146,5 +166,5 @@ The application is protected by password authentication:
 
 ---
 
-**Version**: 2.1 (Password Protection Added)  
-**Last Updated**: 2025-11-18
+**Version**: 2.2 (Mobile Layout, Top Nav, Bucket List, Visual Content)  
+**Last Updated**: 2025-01-11

@@ -591,6 +591,44 @@ async function deleteScenarioRemote(scenarioId) {
     }
 }
 
+async function deleteToBookTaskRemote(taskId) {
+    if (!isWriteApiConfigured()) {
+        return { success: false, error: 'Write API not configured.' };
+    }
+    if (!taskId) {
+        return { success: false, error: 'taskId must be supplied.' };
+    }
+    try {
+        const formData = new URLSearchParams();
+        formData.append('token', WRITE_API_TOKEN);
+        formData.append('action', 'deleteToBook');
+        formData.append('taskId', taskId);
+
+        const response = await fetch(WRITE_API_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        const text = await response.text();
+        let data;
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (parseError) {
+            console.warn('Unable to parse to-book delete response:', parseError, text);
+            data = { success: false, raw: text };
+        }
+
+        if (!response.ok) {
+            return { success: false, status: response.status, data };
+        }
+
+        return data;
+    } catch (error) {
+        console.error('deleteToBookTaskRemote error:', error);
+        return { success: false, error: error.message || String(error) };
+    }
+}
+
 // Debug function to check data loading
 function debugDataLoading() {
     logger.debug('🔍 DEBUG: Current data status:');

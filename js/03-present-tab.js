@@ -406,7 +406,7 @@ function buildToBookCard(task) {
             <div class="card-actions">
                 <button class="btn" type="button" onclick="openConvertToBooked('${task.taskId}')">Move to Booked</button>
                 <button class="btn secondary" type="button" onclick="editToBookTask('${task.taskId}')">Edit</button>
-                <button class="btn ghost" type="button" onclick="archiveToBookTask('${task.taskId}')">Archive</button>
+                <button class="btn ghost" type="button" onclick="deleteToBookTask('${task.taskId}')">Delete</button>
             </div>
         </div>
     `;
@@ -524,26 +524,35 @@ function findBookedEntry(bookingId) {
     return { index: -1, row: null, data: null };
 }
 
-function archiveToBookTask(taskId) {
-    const { index, row } = findToBookTask(taskId);
+async function deleteToBookTask(taskId) {
+    const { index, row, data } = findToBookTask(taskId);
     if (index === -1) {
         showStatus('Unable to find that booking request.', 'error');
         return;
     }
     
-    const nowIso = new Date().toISOString();
-    if (Array.isArray(row)) {
-        row[8] = 'archived';
-        row[10] = nowIso;
-        currentData.toBookTasks[index] = row;
-    } else if (row) {
-        row.status = 'archived';
-        row.updatedAt = nowIso;
-        currentData.toBookTasks[index] = row;
+    const taskName = data?.instruction || data?.bookingType || 'this booking request';
+    if (!confirm(`Are you sure you want to delete "${taskName}"?`)) {
+        return;
     }
-
-    showStatus('Booking request archived.', 'success');
+    
+    // Delete from remote database
+    const result = await deleteToBookTaskRemote(taskId);
+    if (!result || result.success === false) {
+        // If remote delete fails, still allow local deletion if it's a local-only item
+        if (!row.__local) {
+            showStatus(`❌ Unable to delete booking request: ${result?.error || 'Unknown error'}`, 'error');
+            return;
+        }
+    }
+    
+    // Remove from local array
+    currentData.toBookTasks.splice(index, 1);
+    
+    // Update local storage
     persistLocalToBook();
+    
+    showStatus('Booking request deleted.', 'success');
     renderToBookBoard();
 }
 

@@ -1691,7 +1691,8 @@ function createRelationshipTimeline() {
                     endDate: currentYear === endYear ? period.endDate : `${currentYear}-12-31`,
                     countries: period.countries,
                     type: period.type,
-                    notes: period.notes
+                    notes: period.notes,
+                    albumUrl: period.albumUrl || ''
                 };
                 
                 if (!periodsByYear[currentYear]) {
@@ -1766,6 +1767,17 @@ function createRelationshipTimeline() {
             
             const countriesMarkup = renderTimelineCountries(period) || sanitizeText(period.countries || '');
             const notesMarkup = period.notes ? sanitizeText(period.notes) : '';
+            
+            // Google Photos album support
+            const albumUrl = period.albumUrl || '';
+            const photosMarkup = albumUrl ? `
+                <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                    <a href="${sanitizeAttribute(albumUrl)}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 6px; color: var(--color-primary); text-decoration: none; font-size: 0.85em;">
+                        <img src="https://www.gstatic.com/images/icons/material/system/1x/photo_library_white_24dp.png" alt="Photos" style="width: 20px; height: 20px; filter: brightness(0) invert(1) sepia(100%) saturate(200%) hue-rotate(200deg); opacity: 0.8;">
+                        <span>View photos</span>
+                    </a>
+                </div>
+            ` : '';
 
             timelineItem.innerHTML = `
                 <div style="display: flex; align-items: flex-start; margin-bottom: 5px;">
@@ -1776,6 +1788,7 @@ function createRelationshipTimeline() {
                     <div style="flex: 1;">
                         <div class="timeline-countries" style="color: white; font-weight: bold; margin-bottom: 3px; display:flex; flex-wrap: wrap; gap:8px;">${countriesMarkup}</div>
                         <div class="timeline-notes" style="color: #ccc; font-size: 0.9em;">${notesMarkup}</div>
+                        ${photosMarkup}
                     </div>
                 </div>
             `;
@@ -1831,7 +1844,7 @@ function getRelationshipTimelineData() {
     filteredData.sort((a, b) => parseDate(a[0]) - parseDate(b[0]));
     
     filteredData.forEach(entry => {
-        const [date, kimberCountry, sionaCountry, notes] = entry;
+        const [date, kimberCountry, sionaCountry, notes, albumUrl] = entry;
         
         const countries = kimberCountry === sionaCountry ? kimberCountry : `${kimberCountry} / ${sionaCountry}`;
         const type = kimberCountry === sionaCountry ? 'together' : 'separate';
@@ -1843,10 +1856,15 @@ function getRelationshipTimelineData() {
                 endDate: date,
                 countries: countries,
                 type: type,
-                notes: notes
+                notes: notes,
+                albumUrl: albumUrl || ''
             };
         } else {
             currentPeriod.endDate = date;
+            // If this entry has an album URL and the period doesn't, add it
+            if (albumUrl && !currentPeriod.albumUrl) {
+                currentPeriod.albumUrl = albumUrl;
+            }
         }
     });
     

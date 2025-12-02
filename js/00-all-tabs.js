@@ -1612,9 +1612,18 @@ function renderTimelineCountries(period) {
 
 // Tab switching
 function switchTab(tabName) {
-    // Update tab buttons
+    // Update top navigation bar items
+    document.querySelectorAll('.top-nav-bar__item').forEach(item => item.classList.remove('active'));
+    const activeNavItem = document.querySelector(`.top-nav-bar__item[data-tab="${tabName}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+
+    // Update legacy tab buttons (for backwards compatibility)
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 
     // Update tab content
     document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));

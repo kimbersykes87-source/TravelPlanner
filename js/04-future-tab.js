@@ -835,6 +835,15 @@ function buildScenarioStayCard(stay, index) {
                 <label>Route / key cities</label>
                 <textarea id="${routeId}" rows="2" oninput="onScenarioStayFieldInput(${index}, 'routeNotes', this.value)">${sanitizeText(stay.routeNotes || '')}</textarea>
             </div>
+            <div class="form-field form-field--full">
+                <label>Image URL (optional)</label>
+                <input type="url" 
+                       id="scenarioStayImage-${index}" 
+                       placeholder="https://..."
+                       value="${sanitizeAttribute(stay.imageUrl || '')}"
+                       oninput="onScenarioStayFieldInput(${index}, 'imageUrl', this.value)">
+                ${stay.imageUrl ? `<div style="margin-top: 8px;"><img src="${sanitizeAttribute(stay.imageUrl)}" alt="Stay image" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;"></div>` : ''}
+            </div>
         </div>
     `;
 }
@@ -1012,7 +1021,8 @@ function addScenarioStayRow() {
         endDate: scenarioEditorState.scenario.endDate || '',
         notes: '',
         accommodationType: '',
-        routeNotes: ''
+        routeNotes: '',
+        imageUrl: ''
     };
 
     if (Array.isArray(stays) && stays.length > 0) {
@@ -1209,7 +1219,8 @@ function buildScenarioPayloadFromState() {
             endDate: stay.endDate || stay.startDate || '',
             notes: stay.notes || '',
             accommodationType: stay.accommodationType || '',
-            routeNotes: stay.routeNotes || ''
+            routeNotes: stay.routeNotes || '',
+            imageUrl: stay.imageUrl || ''
         }))
     };
 }
@@ -1235,7 +1246,8 @@ function buildScenarioPayloadFromScenario(scenario) {
             endDate: stay.endDate || stay.startDate || '',
             notes: stay.notes || '',
             accommodationType: stay.accommodationType || '',
-            routeNotes: stay.routeNotes || ''
+            routeNotes: stay.routeNotes || '',
+            imageUrl: stay.imageUrl || ''
         }))
     };
 }
@@ -1429,6 +1441,13 @@ function buildScenarioTimelineHtml(scenario) {
 
         const notes = stay.notes ? `<div class="scenario-timeline__notes">${sanitizeText(stay.notes)}</div>` : '';
         const routeNotes = stay.routeNotes ? `<div class="scenario-timeline__notes"><em>${sanitizeText(stay.routeNotes)}</em></div>` : '';
+        const imageThumbnail = stay.imageUrl ? `
+            <div class="scenario-timeline__image">
+                <a href="${sanitizeAttribute(stay.imageUrl)}" target="_blank" rel="noopener noreferrer">
+                    <img src="${sanitizeAttribute(stay.imageUrl)}" alt="Stay image" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover; cursor: pointer; margin-top: 8px;">
+                </a>
+            </div>
+        ` : '';
 
         return `
             <div class="scenario-timeline__row">
@@ -1439,6 +1458,7 @@ function buildScenarioTimelineHtml(scenario) {
                 <div class="scenario-timeline__meta">
                     ${metadata.map(item => `<span>${item}</span>`).join('')}
                 </div>
+                ${imageThumbnail}
                 ${notes}
                 ${routeNotes}
             </div>
@@ -2070,6 +2090,350 @@ function getCountryFlagHtml(countryName) {
     return '🌍';
 }
 
+// Bucket List Functions
+let currentBucketListData = [];
+let bucketListItemEditorState = null;
+
+function switchFutureSubTab(subTabName) {
+    // Update sub-tab buttons
+    document.querySelectorAll('.present-sub-tab').forEach(btn => btn.classList.remove('active'));
+    const activeButton = document.querySelector(`.present-sub-tab[onclick*="'${subTabName}'"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
+
+    // Hide all sub-tab content
+    document.querySelectorAll('.present-sub-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Show selected sub-tab content
+    if (subTabName === 'scenarios') {
+        document.getElementById('future-scenarios-content').classList.add('active');
+    } else if (subTabName === 'bucket-list') {
+        document.getElementById('future-bucket-list-content').classList.add('active');
+        loadBucketList();
+    }
+}
+
+function loadBucketList() {
+    // Load bucket list data from Google Sheets (assuming a BucketList sheet exists)
+    // For now, we'll use a local array and later integrate with the backend
+    renderBucketList();
+}
+
+function renderBucketList() {
+    const container = document.getElementById('bucketList');
+    if (!container) return;
+
+    if (currentBucketListData.length === 0) {
+        container.innerHTML = '<div class="scenario-editor-stays-empty">No bucket list items yet. Start adding your travel dreams!</div>';
+        return;
+    }
+
+    container.innerHTML = currentBucketListData.map(item => buildBucketListItemHtml(item)).join('');
+}
+
+function buildBucketListItemHtml(item) {
+    const iconPath = getScenarioIconPath(item.icon || 'future');
+    const userClass = item.user === 'siona' ? 'siona' : 'kimber';
+    const completedClass = item.completed ? 'completed' : '';
+    const completedBadge = item.completed && item.completedDate
+        ? `<div class="bucket-list-item__completed-badge">✓ Completed ${formatLongDate(item.completedDate)}</div>`
+        : '';
+    const imageHtml = item.imageUrl
+        ? `<div class="bucket-list-item__image"><a href="${sanitizeAttribute(item.imageUrl)}" target="_blank" rel="noopener noreferrer"><img src="${sanitizeAttribute(item.imageUrl)}" alt="Bucket list image"></a></div>`
+        : '';
+    const notesHtml = item.notes ? `<div class="bucket-list-item__notes">${sanitizeText(item.notes)}</div>` : '';
+
+    return `
+        <div class="bucket-list-item ${userClass} ${completedClass}" data-item-id="${sanitizeAttribute(item.id || '')}">
+            <div class="bucket-list-item__header">
+                <div class="bucket-list-item__icon">
+                    <img src="${sanitizeAttribute(iconPath)}" alt="">
+                </div>
+                <div class="bucket-list-item__content">
+                    <div class="bucket-list-item__title">${sanitizeText(item.description)}</div>
+                    <div class="bucket-list-item__meta">
+                        ${item.country ? sanitizeText(item.country) : 'No country specified'}
+                    </div>
+                </div>
+            </div>
+            ${imageHtml}
+            ${notesHtml}
+            ${completedBadge}
+            <div class="bucket-list-item__actions">
+                <button class="btn secondary" type="button" onclick="openBucketListItemEditor('${sanitizeAttribute(item.id || '')}')">Edit</button>
+                ${!item.completed ? `<button class="btn" type="button" onclick="completeBucketListItem('${sanitizeAttribute(item.id || '')}')">Mark Complete</button>` : ''}
+                <button class="btn ghost" type="button" onclick="deleteBucketListItem('${sanitizeAttribute(item.id || '')}')">Delete</button>
+            </div>
+        </div>
+    `;
+}
+
+function openBucketListItemEditor(itemId) {
+    const modal = document.getElementById('bucketListItemEditorModal');
+    if (!modal) return;
+
+    let item = null;
+    if (itemId) {
+        item = currentBucketListData.find(i => i.id === itemId);
+    }
+
+    bucketListItemEditorState = {
+        item: item ? { ...item } : {
+            id: '',
+            user: 'kimber',
+            icon: 'future',
+            description: '',
+            country: '',
+            imageUrl: '',
+            notes: '',
+            completed: false,
+            completedDate: ''
+        }
+    };
+
+    modal.classList.add('active');
+    renderBucketListItemEditor();
+}
+
+function closeBucketListItemEditor() {
+    const modal = document.getElementById('bucketListItemEditorModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    bucketListItemEditorState = null;
+}
+
+function renderBucketListItemEditor() {
+    if (!bucketListItemEditorState) return;
+    const { item } = bucketListItemEditorState;
+
+    const title = document.getElementById('bucketListItemEditorTitle');
+    if (title) {
+        title.textContent = item.id ? 'Edit Bucket List Item' : 'New Bucket List Item';
+    }
+
+    const userSelect = document.getElementById('bucketListItemUser');
+    if (userSelect) userSelect.value = item.user || 'kimber';
+
+    // Render icon selector - function only takes selectedValue, container is fixed
+    const iconSelectContainer = document.getElementById('bucketListItemIconSelect');
+    if (iconSelectContainer) {
+        // We need to call the function that sets up the icon selector
+        // For now, we'll manually set it up similar to scenario editor
+        renderBucketListIconSelector(item.icon || 'future');
+    }
+
+    const descriptionInput = document.getElementById('bucketListItemDescription');
+    if (descriptionInput) descriptionInput.value = item.description || '';
+
+    const countryInput = document.getElementById('bucketListItemCountry');
+    if (countryInput) {
+        countryInput.value = item.country || '';
+        // Populate country datalist
+        const datalist = document.getElementById('bucketListItemCountryOptions');
+        if (datalist) {
+            datalist.innerHTML = renderScenarioCountryOptions(item.country || '', true);
+        }
+    }
+
+    const imageUrlInput = document.getElementById('bucketListItemImageUrl');
+    if (imageUrlInput) imageUrlInput.value = item.imageUrl || '';
+
+    const notesInput = document.getElementById('bucketListItemNotes');
+    if (notesInput) notesInput.value = item.notes || '';
+
+    const completedCheckbox = document.getElementById('bucketListItemCompleted');
+    const completedDateField = document.getElementById('bucketListItemCompletedDateField');
+    const completedDateInput = document.getElementById('bucketListItemCompletedDate');
+    if (completedCheckbox) {
+        completedCheckbox.checked = item.completed || false;
+        completedCheckbox.addEventListener('change', function() {
+            if (completedDateField) {
+                completedDateField.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+        if (completedDateField) {
+            completedDateField.style.display = item.completed ? 'block' : 'none';
+        }
+    }
+    if (completedDateInput) {
+        completedDateInput.value = item.completedDate || '';
+    }
+
+    const itemIdInput = document.getElementById('bucketListItemId');
+    if (itemIdInput) itemIdInput.value = item.id || '';
+}
+
+function submitBucketListItem(event) {
+    event.preventDefault();
+    if (!bucketListItemEditorState) return;
+
+    const item = bucketListItemEditorState.item;
+    item.user = document.getElementById('bucketListItemUser').value;
+    const selectedIcon = document.querySelector('#bucketListItemIconSelect .scenario-icon-select__option.active');
+    item.icon = selectedIcon ? selectedIcon.dataset.value : 'future';
+    item.description = document.getElementById('bucketListItemDescription').value;
+    item.country = document.getElementById('bucketListItemCountry').value;
+    item.imageUrl = document.getElementById('bucketListItemImageUrl').value;
+    item.notes = document.getElementById('bucketListItemNotes').value;
+    item.completed = document.getElementById('bucketListItemCompleted').checked;
+    item.completedDate = item.completed ? (document.getElementById('bucketListItemCompletedDate').value || new Date().toISOString().split('T')[0]) : '';
+
+    if (!item.id) {
+        item.id = generateLocalId('bucket');
+        currentBucketListData.push(item);
+    } else {
+        const index = currentBucketListData.findIndex(i => i.id === item.id);
+        if (index >= 0) {
+            currentBucketListData[index] = item;
+        }
+    }
+
+    // If completed, create relationship log entry
+    if (item.completed && item.completedDate) {
+        createBucketListRelationshipLogEntry(item);
+    }
+
+    closeBucketListItemEditor();
+    renderBucketList();
+    showStatus('Bucket list item saved.', 'success');
+}
+
+function completeBucketListItem(itemId) {
+    const item = currentBucketListData.find(i => i.id === itemId);
+    if (!item) return;
+
+    const completionDate = prompt('Enter completion date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (!completionDate) return;
+
+    item.completed = true;
+    item.completedDate = completionDate;
+
+    // Create relationship log entry
+    createBucketListRelationshipLogEntry(item);
+
+    renderBucketList();
+    showStatus('Bucket list item marked as completed.', 'success');
+}
+
+function createBucketListRelationshipLogEntry(item) {
+    // This would create an entry in the relationship log
+    // For now, we'll just log it - actual implementation would call the write API
+    const logEntry = {
+        date: item.completedDate,
+        description: `Completed bucket list: ${item.description}`,
+        bucketListItemId: item.id
+    };
+    // TODO: Integrate with relationship log write API
+    console.log('Would create relationship log entry:', logEntry);
+}
+
+function deleteBucketListItem(itemId) {
+    const item = currentBucketListData.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (!confirm(`Are you sure you want to delete "${item.description}"?`)) {
+        return;
+    }
+
+    const index = currentBucketListData.findIndex(i => i.id === itemId);
+    if (index >= 0) {
+        currentBucketListData.splice(index, 1);
+    }
+
+    renderBucketList();
+    showStatus('Bucket list item deleted.', 'success');
+}
+
+function renderBucketListIconSelector(selectedValue) {
+    const container = document.getElementById('bucketListItemIconSelect');
+    if (!container) return;
+    
+    const normalizedValue = (selectedValue || 'future').toString().toLowerCase();
+    const options = SCENARIO_ICON_OPTIONS || [];
+    const currentOption = options.find(opt => opt.value === normalizedValue) || options[0];
+    
+    const menuMarkup = options.map(option => `
+        <button type="button" class="scenario-icon-select__option${option.value === normalizedValue ? ' active' : ''}" data-value="${sanitizeAttribute(option.value)}" onclick="selectBucketListIcon('${sanitizeAttribute(option.value)}')">
+            <img src="${sanitizeAttribute(option.path)}" alt="">
+            <span>${sanitizeText(option.label)}</span>
+        </button>
+    `).join('');
+    
+    container.innerHTML = `
+        <button type="button" class="scenario-icon-select__trigger" onclick="toggleBucketListIconMenu(event)">
+            <img src="${sanitizeAttribute(currentOption?.path || 'assets/icons/future.svg')}" alt="">
+            <span>${sanitizeText(currentOption?.label || 'Select icon')}</span>
+            <span class="scenario-icon-select__chevron">▾</span>
+        </button>
+        <div class="scenario-icon-select__menu" role="listbox" style="display: none;">
+            ${menuMarkup}
+        </div>
+    `;
+}
+
+function toggleBucketListIconMenu(event) {
+    event.stopPropagation();
+    const container = document.getElementById('bucketListItemIconSelect');
+    if (!container) return;
+    const menu = container.querySelector('.scenario-icon-select__menu');
+    const isOpen = container.dataset.open === 'true';
+    
+    if (isOpen) {
+        menu.style.display = 'none';
+        container.dataset.open = 'false';
+    } else {
+        menu.style.display = 'block';
+        container.dataset.open = 'true';
+        // Close other icon menus
+        document.querySelectorAll('.scenario-icon-select').forEach(other => {
+            if (other !== container) {
+                other.dataset.open = 'false';
+                other.querySelector('.scenario-icon-select__menu').style.display = 'none';
+            }
+        });
+    }
+}
+
+function selectBucketListIcon(value) {
+    const container = document.getElementById('bucketListItemIconSelect');
+    if (!container) return;
+    
+    const option = SCENARIO_ICON_OPTIONS.find(opt => opt.value === value);
+    if (!option) return;
+    
+    // Update active state
+    container.querySelectorAll('.scenario-icon-select__option').forEach(opt => opt.classList.remove('active'));
+    container.querySelector(`.scenario-icon-select__option[data-value="${value}"]`)?.classList.add('active');
+    
+    // Update trigger
+    const trigger = container.querySelector('.scenario-icon-select__trigger');
+    if (trigger) {
+        const img = trigger.querySelector('img');
+        const span = trigger.querySelector('span:not(.scenario-icon-select__chevron)');
+        if (img) img.src = option.path;
+        if (span) span.textContent = option.label;
+    }
+    
+    // Close menu
+    container.dataset.open = 'false';
+    container.querySelector('.scenario-icon-select__menu').style.display = 'none';
+}
+
+window.toggleBucketListIconMenu = toggleBucketListIconMenu;
+window.selectBucketListIcon = selectBucketListIcon;
+
+// Make functions globally available
+window.switchFutureSubTab = switchFutureSubTab;
+window.openBucketListItemEditor = openBucketListItemEditor;
+window.closeBucketListItemEditor = closeBucketListItemEditor;
+window.submitBucketListItem = submitBucketListItem;
+window.completeBucketListItem = completeBucketListItem;
+window.deleteBucketListItem = deleteBucketListItem;
+
 // VERSION: 2025-01-11-emoji-fix - Accommodation icons now use SVG instead of emojis
 function getAccommodationIcon(accommodationType) {
     if (!accommodationType) return '';
@@ -2228,4 +2592,104 @@ function parseDate(dateStr) {
         // Fallback to direct parsing
         return new Date(dateStr);
     }
+}
+
+// Scenario Export Functions
+function openScenarioExport() {
+    const exportView = document.getElementById('scenarioExportView');
+    if (!exportView) return;
+    
+    exportView.classList.remove('hidden');
+    renderScenarioExport();
+}
+
+function closeScenarioExport() {
+    const exportView = document.getElementById('scenarioExportView');
+    if (exportView) {
+        exportView.classList.add('hidden');
+    }
+}
+
+function renderScenarioExport() {
+    const container = document.getElementById('scenarioExportContent');
+    if (!container) return;
+    
+    const models = currentData.futureScenarioModels || [];
+    if (models.length === 0) {
+        container.innerHTML = '<p>No scenarios to export.</p>';
+        return;
+    }
+    
+    // Determine if we need compact mode (more than 6 scenarios)
+    const useCompact = models.length > 6;
+    
+    const cardsHtml = models.map(scenario => {
+        const iconPath = getScenarioIconPath(scenario.icon);
+        const dateRange = formatScenarioDateRange(scenario.startDate, scenario.endDate);
+        const duration = scenario.durationDays ? `${scenario.durationDays} ${scenario.durationDays === 1 ? 'day' : 'days'}` : 'TBC';
+        const countryInfos = collectScenarioCountryInfos(scenario);
+        const countries = countryInfos.map(entry => entry.info.name || entry.code).join(', ');
+        const countryCount = countryInfos.length;
+        
+        // Calculate metrics
+        const metrics = [];
+        if (scenario.durationDays) {
+            metrics.push({ label: 'Duration', value: duration });
+        }
+        if (countryCount > 0) {
+            metrics.push({ label: 'Countries', value: `${countryCount} ${countryCount === 1 ? 'country' : 'countries'}` });
+        }
+        if (scenario.travellers && scenario.travellers.length) {
+            const travellerLabel = scenario.travellers.length === 1 && scenario.travellers[0] !== 'both'
+                ? (scenario.travellers[0] === 'kimber' ? 'Kimber solo' : 'Siona solo')
+                : 'Together';
+            metrics.push({ label: 'Travellers', value: travellerLabel });
+        }
+        
+        const metaItems = [
+            { label: 'Dates', value: dateRange },
+            ...metrics
+        ];
+        
+        const metaHtml = metaItems.map(item => `
+            <div class="scenario-export-card__meta-item">
+                <span class="scenario-export-card__meta-label">${sanitizeText(item.label)}:</span>
+                <span>${sanitizeText(item.value)}</span>
+            </div>
+        `).join('');
+        
+        const countriesHtml = countries ? `
+            <div class="scenario-export-card__countries">
+                <div class="scenario-export-card__meta-label">Countries:</div>
+                <div class="scenario-export-card__countries-list">
+                    ${countryInfos.slice(0, 5).map(entry => {
+                        const name = entry.info.name || entry.code;
+                        return `<span class="scenario-export-card__country-tag">${sanitizeText(name)}</span>`;
+                    }).join('')}
+                    ${countryInfos.length > 5 ? `<span class="scenario-export-card__country-tag">+${countryInfos.length - 5} more</span>` : ''}
+                </div>
+            </div>
+        ` : '';
+        
+        return `
+            <div class="scenario-export-card ${useCompact ? 'compact' : ''}">
+                <div class="scenario-export-card__header">
+                    <div class="scenario-export-card__icon">
+                        <img src="${sanitizeAttribute(iconPath)}" alt="">
+                    </div>
+                    <h3 class="scenario-export-card__title">${sanitizeText(scenario.headline)}</h3>
+                </div>
+                <div class="scenario-export-card__meta">
+                    ${metaHtml}
+                </div>
+                ${countriesHtml}
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = `
+        <div class="scenario-export-grid">
+            ${cardsHtml}
+        </div>
+    `;
 }

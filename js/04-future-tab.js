@@ -2273,8 +2273,8 @@ function submitBucketListItem(event) {
 
     const item = bucketListItemEditorState.item;
     item.user = document.getElementById('bucketListItemUser').value;
-    const selectedIcon = document.querySelector('#bucketListItemIconSelect .scenario-icon-select__option.active');
-    item.icon = selectedIcon ? selectedIcon.dataset.value : 'future';
+    const iconSelect = document.getElementById('bucketListItemIcon');
+    item.icon = iconSelect ? iconSelect.value : 'future';
     item.description = document.getElementById('bucketListItemDescription').value;
     item.country = document.getElementById('bucketListItemCountry').value;
     item.imageUrl = document.getElementById('bucketListItemImageUrl').value;
@@ -2349,82 +2349,17 @@ function deleteBucketListItem(itemId) {
 }
 
 function renderBucketListIconSelector(selectedValue) {
-    const container = document.getElementById('bucketListItemIconSelect');
-    if (!container) return;
+    const select = document.getElementById('bucketListItemIcon');
+    if (!select) return;
     
     const normalizedValue = (selectedValue || 'future').toString().toLowerCase();
     const options = SCENARIO_ICON_OPTIONS || [];
-    const currentOption = options.find(opt => opt.value === normalizedValue) || options[0];
     
-    const menuMarkup = options.map(option => `
-        <button type="button" class="scenario-icon-select__option${option.value === normalizedValue ? ' active' : ''}" data-value="${sanitizeAttribute(option.value)}" onclick="selectBucketListIcon('${sanitizeAttribute(option.value)}')">
-            <img src="${sanitizeAttribute(option.path)}" alt="">
-            <span>${sanitizeText(option.label)}</span>
-        </button>
-    `).join('');
-    
-    container.innerHTML = `
-        <button type="button" class="scenario-icon-select__trigger" onclick="toggleBucketListIconMenu(event)">
-            <img src="${sanitizeAttribute(currentOption?.path || 'assets/icons/future.svg')}" alt="">
-            <span>${sanitizeText(currentOption?.label || 'Select icon')}</span>
-            <span class="scenario-icon-select__chevron">▾</span>
-        </button>
-        <div class="scenario-icon-select__menu" role="listbox" style="display: none;">
-            ${menuMarkup}
-        </div>
-    `;
+    select.innerHTML = options.map(option => {
+        const isSelected = option.value === normalizedValue;
+        return `<option value="${sanitizeAttribute(option.value)}" ${isSelected ? 'selected' : ''}>${sanitizeText(option.label)}</option>`;
+    }).join('');
 }
-
-function toggleBucketListIconMenu(event) {
-    event.stopPropagation();
-    const container = document.getElementById('bucketListItemIconSelect');
-    if (!container) return;
-    const menu = container.querySelector('.scenario-icon-select__menu');
-    const isOpen = container.dataset.open === 'true';
-    
-    if (isOpen) {
-        menu.style.display = 'none';
-        container.dataset.open = 'false';
-    } else {
-        menu.style.display = 'block';
-        container.dataset.open = 'true';
-        // Close other icon menus
-        document.querySelectorAll('.scenario-icon-select').forEach(other => {
-            if (other !== container) {
-                other.dataset.open = 'false';
-                other.querySelector('.scenario-icon-select__menu').style.display = 'none';
-            }
-        });
-    }
-}
-
-function selectBucketListIcon(value) {
-    const container = document.getElementById('bucketListItemIconSelect');
-    if (!container) return;
-    
-    const option = SCENARIO_ICON_OPTIONS.find(opt => opt.value === value);
-    if (!option) return;
-    
-    // Update active state
-    container.querySelectorAll('.scenario-icon-select__option').forEach(opt => opt.classList.remove('active'));
-    container.querySelector(`.scenario-icon-select__option[data-value="${value}"]`)?.classList.add('active');
-    
-    // Update trigger
-    const trigger = container.querySelector('.scenario-icon-select__trigger');
-    if (trigger) {
-        const img = trigger.querySelector('img');
-        const span = trigger.querySelector('span:not(.scenario-icon-select__chevron)');
-        if (img) img.src = option.path;
-        if (span) span.textContent = option.label;
-    }
-    
-    // Close menu
-    container.dataset.open = 'false';
-    container.querySelector('.scenario-icon-select__menu').style.display = 'none';
-}
-
-window.toggleBucketListIconMenu = toggleBucketListIconMenu;
-window.selectBucketListIcon = selectBucketListIcon;
 
 // Make functions globally available
 window.switchFutureSubTab = switchFutureSubTab;

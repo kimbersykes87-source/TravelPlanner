@@ -18,6 +18,21 @@ This project (**TravelPlanner_v2**) is the **source of truth**. Deployment means
 
 ---
 
+## Required Cloudflare Pages settings (must be correct)
+
+If the live site shows **"Failed to load module script... MIME type of text/jsx"** or loads `main.jsx`, Cloudflare is **not** serving the build output. Fix it in the dashboard:
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) → **Workers & Pages** → **travelplanner-ks** → **Settings**.
+2. Under **Build configuration** set:
+   - **Build command:** `npm run build`
+   - **Build output directory:** `dist`
+3. **Root directory:** leave empty (use repo root).
+4. Save and trigger a new deploy (e.g. push a small commit, or **Deployments** → **Retry deployment**).
+
+The app is a Vite build: the **source** `index.html` references `/src/main.jsx`, which is only valid in dev. The **built** output in `dist/` has rewritten script tags to `.js` files. Cloudflare **must** publish the `dist` folder, not the repo root.
+
+---
+
 ## Steps to Run (in order)
 
 Execute these in the **project folder** `c:\dev\TravelPlanner_v2`. Use PowerShell; use `;` not `&&` between commands if chaining.

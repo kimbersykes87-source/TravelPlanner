@@ -1,5 +1,15 @@
 # Travel Planner v2 - Deployment
 
+## Cloudflare build settings (required)
+
+**Build command:** `npm run build`  
+**Build output directory:** `dist`  
+**Root directory:** (empty)
+
+If these are wrong, the site can show **"Failed to load module script... MIME type text/jsx"** because the server would serve source files instead of the built `dist/` output. Fix in Dashboard → Workers & Pages → travelplanner-ks → Settings → Build configuration.
+
+---
+
 ## How to deploy (Cursor / agents)
 
 **When the user says "deploy", "redeploy", or "push to production":** follow **[docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md)** and run the steps there. That document is the single source of truth for deploying all changes from this project.

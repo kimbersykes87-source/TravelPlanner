@@ -1,0 +1,20 @@
+# Ping Supabase every 5-6 days to keep free project active (prevents 7-day pause)
+name: Supabase Keep-Alive
+on:
+  schedule:
+    - cron: '0 12 */5 * *'  # Every 5 days at noon UTC
+  workflow_dispatch:  # Allow manual trigger
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          if [ -n "${{ secrets.SUPABASE_URL }}" ]; then
+            curl -s -o /dev/null -w "%{http_code}" \
+              "${{ secrets.SUPABASE_URL }}/rest/v1/profiles?limit=1" \
+              -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+          else
+            echo "SUPABASE_URL not set - add as GitHub repo secret"
+          fi

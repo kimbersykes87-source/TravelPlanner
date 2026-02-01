@@ -25,7 +25,17 @@ export function Header() {
           textTransform: 'uppercase',
         }}
       >
-        Fionas Kimberinho
+        Travel Planner
+      </span>
+      <span
+        style={{
+          fontFamily: 'var(--font-handwritten)',
+          fontSize: 16,
+          fontWeight: 600,
+          color: 'var(--color-text-secondary)',
+        }}
+      >
+        by Jenny
       </span>
     </header>
   );

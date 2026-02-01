@@ -1,9 +1,10 @@
 /* Travel Planner v2 - Design System */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
   --font-primary: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   --font-display: 'Bebas Neue', 'Inter', system-ui, sans-serif;
+  --font-handwritten: 'Caveat', cursive;
   --font-mono: 'Space Mono', monospace;
 
   --color-bg-primary: #000000;

@@ -1,5 +1,5 @@
 ---
-description: When the user asks to deploy, redeploy, or push to production — follow docs/DEPLOY_INSTRUCTIONS.md and run the deployment steps to push all changes from this project.
+description: When the user asks to deploy, redeploy, or push to production — follow docs/deployment/DEPLOY_INSTRUCTIONS.md and run the deployment steps to push all changes from this project.
 alwaysApply: false
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: false
 
 When the user says **deploy**, **redeploy**, **push to production**, or **deploy all changes**:
 
-1. **Read** [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md) (project root relative: `docs/DEPLOY_INSTRUCTIONS.md`).
+1. **Read** [docs/deployment/DEPLOY_INSTRUCTIONS.md](docs/deployment/DEPLOY_INSTRUCTIONS.md) (project root: `docs/deployment/DEPLOY_INSTRUCTIONS.md`).
 2. **Execute** the steps in order in the project folder `c:\dev\TravelPlanner_v2`:
    - Ensure git is initialized and remote `origin` is `https://github.com/kimbersykes87-source/TravelPlanner.git`.
    - Run `git add -A`, then `git commit -m "..."` with a clear message (skip commit if nothing to commit).

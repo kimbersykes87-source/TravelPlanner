@@ -1,6 +1,6 @@
 # Before You Deploy — Simple Checklist
 
-Do these steps **before** running the deployment. Deployment is done **from this folder** (TravelPlanner_v2) by pushing to GitHub; see [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md).
+Do these steps **before** running the deployment. Deployment is done **from this folder** (TravelPlanner_v2) by pushing to GitHub; see [docs/deployment/DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md).
 
 ---
 
@@ -33,7 +33,7 @@ If your data is still in Google Sheets:
 
 1. Open [your spreadsheet](https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit)
 2. **Extensions** → **Apps Script**
-3. Add the script from `apps-script/SyncToSupabase.gs` (see [docs/GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md))
+3. Add the script from `apps-script/SyncToSupabase.gs` (see [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md))
 4. Add script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (from your `.env.local`)
 5. Run **Travel Planner → Sync to Supabase**
 6. *(Optional)* Add a daily trigger for `runScheduledSync` to keep Supabase active (7-day free tier)
@@ -49,7 +49,7 @@ If your data is still in Google Sheets:
 
 ## 🚀 After deployment runs
 
-When the agent deploys (from this folder, per [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md)):
+When the agent deploys (from this folder, per [docs/deployment/DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md)):
 
 1. **Cloudflare** — Ensure [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → travelplanner-ks → Settings has:
    - Build command: `npm run build`

@@ -6,7 +6,7 @@ Most setup is done. Complete these two items:
 
 ## 1. Create Database Webhooks (~5 min)
 
-Full step-by-step: **[docs/WEBHOOKS_INSTALL_GUIDE.md](WEBHOOKS_INSTALL_GUIDE.md)**
+Full step-by-step: **[WEBHOOKS_INSTALL_GUIDE.md](WEBHOOKS_INSTALL_GUIDE.md)**
 
 ### Open the webhooks page
 

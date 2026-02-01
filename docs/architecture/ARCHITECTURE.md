@@ -82,7 +82,7 @@ TravelPlanner/
 
 ## 🚀 Deployment
 
-**v2 app (this project):** Deploy from **TravelPlanner_v2** by pushing to GitHub. **Canonical instructions:** [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md). When the user says "deploy", Cursor/agents should follow that doc. Live site: https://travelplanner-ks.pages.dev
+**v2 app (this project):** Deploy from **TravelPlanner_v2** by pushing to GitHub. **Canonical instructions:** [docs/deployment/DEPLOY_INSTRUCTIONS.md](../deployment/DEPLOY_INSTRUCTIONS.md). When the user says "deploy", Cursor/agents should follow that doc. Live site: https://travelplanner-ks.pages.dev
 
 ### Cloudflare Pages Configuration (v2)
 
@@ -108,7 +108,7 @@ TravelPlanner/
 
 1. **Edit files** in `c:\dev\TravelPlanner_v2` (this project)
 2. **Test locally**: `npm run dev` → http://localhost:5173
-3. **Deploy**: Follow [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md) (add, commit, push to `feat/globe-loader`)
+3. **Deploy**: Follow [docs/deployment/DEPLOY_INSTRUCTIONS.md](../deployment/DEPLOY_INSTRUCTIONS.md) (add, commit, push to `feat/globe-loader`)
 4. **Auto-deploy**: Cloudflare Pages builds and deploys in 1-3 minutes
 
 ### Cloudflare Pages Function Changes

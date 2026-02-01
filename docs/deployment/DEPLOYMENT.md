@@ -18,7 +18,7 @@ If these are wrong, the site can show **"Failed to load module script... MIME ty
 
 ## How to deploy (Cursor / agents)
 
-**When the user says "deploy", "redeploy", or "push to production":** follow **[docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md)** and run the steps there. That document is the single source of truth for deploying all changes from this project.
+**When the user says "deploy", "redeploy", or "push to production":** follow **[docs/deployment/DEPLOY_INSTRUCTIONS.md](DEPLOY_INSTRUCTIONS.md)** and run the steps there. That document is the single source of truth for deploying all changes from this project.
 
 - **Project folder:** `c:\dev\TravelPlanner_v2`
 - **Remote:** `https://github.com/kimbersykes87-source/TravelPlanner.git`
@@ -79,7 +79,7 @@ supabase link --project-ref xaxbbtzsyrtchtjrjvqy
 
 Supabase free tier **pauses projects after 7 days of inactivity**. You need activity at least every 5–6 days.
 
-**Option A – Daily Sheets sync (recommended):** Add a time-based trigger in Apps Script for `runScheduledSync` (daily). Syncs data and counts as activity. See [docs/GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md).
+**Option A – Daily Sheets sync (recommended):** Add a time-based trigger in Apps Script for `runScheduledSync` (daily). Syncs data and counts as activity. See [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md).
 
 **Option B – GitHub Actions:** `.github/workflows/supabase-keepalive.yml` pings Supabase every 5 days. Add secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`. Run manually: Actions → Supabase Keep-Alive → Run workflow.
 
@@ -89,14 +89,14 @@ Supabase free tier **pauses projects after 7 days of inactivity**. You need acti
 
 ## Sheets to Supabase Sync
 
-Full setup: **[docs/GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md)**
+Full setup: **[docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md)**
 
 1. Open your [Google Spreadsheet](https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit) → **Extensions** → **Apps Script**
 2. Add `apps-script/SyncToSupabase.gs` as a new script file
 3. Script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (values in GOOGLE_SETUP.md)
 4. Run `onAddTravelPlannerMenu()` once to add menu
 5. Use menu: **Travel Planner → Sync to Supabase**
-6. **Optional – daily trigger:** Triggers → Add trigger → `runScheduledSync`, day timer. Keeps Supabase active (7-day free tier requirement). See [docs/GOOGLE_SETUP.md](docs/GOOGLE_SETUP.md#step-6-optional--daily-trigger-keeps-supabase-active).
+6. **Optional – daily trigger:** Triggers → Add trigger → `runScheduledSync`, day timer. Keeps Supabase active (7-day free tier requirement). See [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md#step-6-optional--daily-trigger-keeps-supabase-active).
 
 ---
 

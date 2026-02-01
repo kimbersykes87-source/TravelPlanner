@@ -82,48 +82,34 @@ TravelPlanner/
 
 ## 🚀 Deployment
 
-### Cloudflare Pages Configuration
+**v2 app (this project):** Deploy from **TravelPlanner_v2** by pushing to GitHub. **Canonical instructions:** [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md). When the user says "deploy", Cursor/agents should follow that doc. Live site: https://travelplanner-ks.pages.dev
+
+### Cloudflare Pages Configuration (v2)
 
 - **Project Name**: `travelplanner-ks`
 - **Production Branch**: `feat/globe-loader`
-- **Framework Preset**: `None`
-- **Build Command**: (empty)
-- **Build Output Directory**: `/`
-- **Root Directory**: (empty)
+- **Build Command**: `npm run build`
+- **Build Output Directory**: `dist`
+- **Env vars**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 
-### Environment Variables
+### Deployment Process (v2)
 
-- `SPREADSHEET_ID`: `1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8`
-
-### Deployment Process
-
-1. **Push to GitHub**: Changes pushed to `feat/globe-loader` branch
-2. **Auto-Deploy**: Cloudflare Pages detects commit and triggers deployment
-3. **Build**: Cloudflare Pages uploads static files (HTML, JS, CSS, assets)
-4. **Functions**: Cloudflare Pages automatically deploys `functions/` directory as serverless functions
-5. **Live**: Site available at `https://travelplanner-ks.pages.dev/`
+1. From **TravelPlanner_v2**: `git add -A`, commit, `git branch -M feat/globe-loader`, `git push -u origin feat/globe-loader --force`
+2. **Auto-Deploy**: Cloudflare Pages builds from the repo (npm run build → dist/)
+3. **Live**: https://travelplanner-ks.pages.dev/
 
 **Deployment Time**: ~1-3 minutes
 
 ---
 
-## 🔧 Making Changes
+## 🔧 Making Changes (v2)
 
-### Frontend Changes (HTML/JS/CSS)
+### Frontend changes
 
-1. **Edit files locally** (in Dropbox folder)
-2. **Test locally** (if needed):
-   ```powershell
-   python -m http.server 8000
-   # Open http://localhost:8000/digital-nomad-planner.html
-   ```
-3. **Commit and push**:
-   ```powershell
-   git add .
-   git commit -m "Description of changes"
-   git push origin feat/globe-loader
-   ```
-4. **Auto-deploy**: Cloudflare Pages will automatically deploy in 1-3 minutes
+1. **Edit files** in `c:\dev\TravelPlanner_v2` (this project)
+2. **Test locally**: `npm run dev` → http://localhost:5173
+3. **Deploy**: Follow [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md) (add, commit, push to `feat/globe-loader`)
+4. **Auto-deploy**: Cloudflare Pages builds and deploys in 1-3 minutes
 
 ### Cloudflare Pages Function Changes
 

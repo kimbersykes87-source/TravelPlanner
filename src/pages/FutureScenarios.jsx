@@ -88,12 +88,6 @@ function normalizeCreatedBy(v) {
 }
 
 export function FutureScenarios() {
-  /** Normalize stay date strings to YYYY-MM-DD for save (in component scope for bundling). */
-  const normalizeStayDates = (stay) => {
-    const start = (stay.start_date || '').toString().trim().slice(0, 10);
-    const end = (stay.end_date || '').toString().trim().slice(0, 10);
-    return { ...stay, start_date: start || null, end_date: end || null };
-  };
   const { data, loading, error, refetch } = useTravelData();
   const { isViewer } = useViewer();
   const scenarios = data?.futureScenarios || [];
@@ -117,13 +111,20 @@ export function FutureScenarios() {
 
   const sortedScenarios = useMemo(() => {
     return [...scenarios].sort((a, b) => {
-      const sa = (a.start_date || '').slice(0, 10);
-      const sb = (b.start_date || '').slice(0, 10);
+      const getEffectiveStart = (sc) => {
+        const fromSc = (sc.start_date || '').toString().slice(0, 10);
+        if (fromSc) return fromSc;
+        const stays = scenarioStays.filter((s) => s.scenario_id === sc.scenario_id);
+        const starts = stays.map((s) => (s.start_date || '').toString().slice(0, 10)).filter(Boolean);
+        return starts.length ? starts.sort()[0] : '';
+      };
+      const sa = getEffectiveStart(a);
+      const sb = getEffectiveStart(b);
       if (!sa) return 1;
       if (!sb) return -1;
       return sa.localeCompare(sb);
     });
-  }, [scenarios]);
+  }, [scenarios, scenarioStays]);
 
   const getStaysForScenario = (scenarioId) =>
     scenarioStays.filter((s) => s.scenario_id === scenarioId).sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
@@ -326,18 +327,19 @@ export function FutureScenarios() {
           accommodation_type: scenario.accommodation_type || null,
         },
         validStays.map((s) => {
-          const n = normalizeStayDates(s);
+          const start = (s.start_date || '').toString().trim().slice(0, 10) || null;
+          const end = (s.end_date || '').toString().trim().slice(0, 10) || null;
           return {
-            stay_id: n.stay_id,
-            profile_scope: (n.profile_scope || 'both').toLowerCase(),
-            country: n.country?.trim() || null,
-            city: n.city?.trim() || null,
-            start_date: n.start_date || null,
-            end_date: n.end_date || null,
-            notes: n.notes?.trim() || null,
-            accommodation_type: n.accommodation_type || null,
-            route_notes: n.route_notes?.trim() || null,
-            image_url: n.image_url?.trim() || null,
+            stay_id: s.stay_id,
+            profile_scope: (s.profile_scope || 'both').toLowerCase(),
+            country: s.country?.trim() || null,
+            city: s.city?.trim() || null,
+            start_date: start,
+            end_date: end,
+            notes: s.notes?.trim() || null,
+            accommodation_type: s.accommodation_type || null,
+            route_notes: s.route_notes?.trim() || null,
+            image_url: s.image_url?.trim() || null,
           };
         })
       );

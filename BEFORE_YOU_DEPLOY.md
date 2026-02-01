@@ -1,6 +1,6 @@
 # Before You Deploy — Simple Checklist
 
-Do these steps **before** running the deployment (copying v2 into TravelPlanner and pushing).
+Do these steps **before** running the deployment. Deployment is done **from this folder** (TravelPlanner_v2) by pushing to GitHub; see [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md).
 
 ---
 
@@ -47,30 +47,19 @@ If your data is still in Google Sheets:
 
 ---
 
-## 🚀 After Deployment Runs
+## 🚀 After deployment runs
 
-After the agent copies v2 into TravelPlanner and commits, you need to:
+When the agent deploys (from this folder, per [docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md)):
 
-1. **Update Cloudflare** — [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → travelplanner-ks → Settings:
+1. **Cloudflare** — Ensure [dash.cloudflare.com](https://dash.cloudflare.com) → Workers & Pages → travelplanner-ks → Settings has:
    - Build command: `npm run build`
    - Build output directory: `dist`
-   - Remove variable: `SPREADSHEET_ID`
-   - Add variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (use the values from `.env.local`)
+   - Env vars: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (from `.env.local`)
 
-2. **Push** — `git push origin feat/globe-loader` (or ask the agent to do it)
-
-3. **Test** — Visit your site and check that data loads.
+2. **Test** — Visit https://travelplanner-ks.pages.dev and check that data loads.
 
 ---
 
 ## 🔙 Rollback
 
-If something goes wrong, you can restore v1:
-
-```powershell
-cd c:\dev\TravelPlanner
-git checkout backup-v1-before-v2
-git push origin backup-v1-before-v2 --force  # to make Cloudflare use it
-```
-
-Then revert the Cloudflare settings (build command, env vars) in the dashboard.
+If something goes wrong and you need to restore a previous deploy, use an earlier commit from `feat/globe-loader` in this repo, or the backup branch if you have one (e.g. `backup-v1-before-v2` in the TravelPlanner repo). Then revert Cloudflare settings in the dashboard if needed.

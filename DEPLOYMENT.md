@@ -1,5 +1,16 @@
 # Travel Planner v2 - Deployment
 
+## How to deploy (Cursor / agents)
+
+**When the user says "deploy", "redeploy", or "push to production":** follow **[docs/DEPLOY_INSTRUCTIONS.md](docs/DEPLOY_INSTRUCTIONS.md)** and run the steps there. That document is the single source of truth for deploying all changes from this project.
+
+- **Project folder:** `c:\dev\TravelPlanner_v2`
+- **Remote:** `https://github.com/kimbersykes87-source/TravelPlanner.git`
+- **Branch:** `feat/globe-loader`
+- **Live site:** https://travelplanner-ks.pages.dev
+
+---
+
 ## Dev Workflow Rules
 
 - **Always close any existing running dev servers** before starting a new one (Ctrl+C)

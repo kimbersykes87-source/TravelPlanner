@@ -87,13 +87,10 @@ The script expects these sheet names (case-sensitive):
 - RelationshipLog
 - Statistics
 - PresentBookings
-- FutureScenarios
-- ScenarioStays
-- ToBook
-- BookedUpcoming
-- BookingTypeMeta
 - VisaRules
 - PreRelationshipCountries
 - BucketList
 
 Sheets that don't exist are skipped. Rename sheets to match if needed.
+
+ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, and BookingTypeMeta are edited in the app and stored in Supabase—no Sheets tabs needed.

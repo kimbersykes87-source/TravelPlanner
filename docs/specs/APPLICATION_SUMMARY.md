@@ -94,22 +94,19 @@
 - **Purpose**: Current travel bookings
 - **Columns**: BookingID, ProfileID, Type, SubType, StartDate, EndDate, Country, City, Details, LinkedBookingID
 
-#### 7. **FutureScenarios Sheet**
-- **Purpose**: Scenario-level metadata for planned future travel
-- **Columns**: ScenarioID, ScenarioHeadline, ScenarioCreatedBy, ScenarioRating, ScenarioStart, ScenarioEnd, ScenarioSummary, ScenarioIcon, AccommodationType, LastUpdated
-
-#### 8. **ScenarioStays Sheet**
-- **Purpose**: Detailed stays within a scenario
-- **Columns**: ScenarioID, StayID, ProfileScope, Country, City, StartDate, EndDate, Notes, AccommodationType, RouteNotes
-
-#### 9. **VisaRules Sheet**
+#### 7. **VisaRules Sheet**
 - **Purpose**: Centralized visa rule definitions for validation
 - **Columns**: RuleID, Jurisdiction, WindowDays, MaxDays, ContiguousTerritory, Notes
 
-#### 10. **ScenarioCalendar Sheet** *(REMOVED - Redundant)*
-- **Status**: Removed in redundancy cleanup - data derived from ScenarioStays when needed
-- **Previous Purpose**: Normalized day-level entries for scenario validation and analytics
-- **Reason for Removal**: Redundant storage - all day-level data can be derived from ScenarioStays date ranges
+### App-only data (Supabase, no Sheets)
+
+These are edited in the app and stored in Supabase directly:
+
+- **ToBook** – Tasks to book (Present → To Book)
+- **BookedUpcoming** – Confirmed bookings (Present → Booked)
+- **FutureScenarios** – Scenario metadata (Future → Scenarios)
+- **ScenarioStays** – Scenario itineraries (with scenarios)
+- **BookingTypeMeta** – Booking type icons/colors
 
 ---
 
@@ -234,8 +231,7 @@
 - **Detail Drawer**: Expandable view with itinerary timeline (flags, day counts, notes), visa projection table, and Leaflet map highlighting selected countries
 - **Validation**: Server-side visa simulations reuse Us-tab rules (US ESTA admissions, Siona B1/B2 rolling 365, UK tax-year, Schengen rolling 180); warnings/errors surfaced before save
 - **Editor**: Modal form supports headline, creator, icon picker, dates, rating, scenario notes, accommodation type, and dynamic stay rows (scope, country, city, notes, route highlights)
-- **CRUD**: Create/update/delete scenarios persisted to Sheets (`FutureScenarios`, `ScenarioStays`)
-- **Note**: `ScenarioCalendar` sheet was removed - data derived on-demand from `ScenarioStays`
+- **CRUD**: Create/update/delete scenarios persisted to Supabase (`future_scenarios`, `scenario_stays`)
 
 ---
 
@@ -342,6 +338,9 @@ TravelPlanner/
 2. **ScenarioCache Sheets**: Disabled - cache sheets (`ScenarioCacheMetadata`, `ScenarioCacheDays`, `ScenarioCacheSummary`) not used in frontend, data calculated on-demand from source sheets
 3. **Historical Data Processing**: Consolidated - `buildHistoryEntries_()` and `buildHistoricalVisaDayNumbers_()` now share a consolidated helper that reads `RelationshipLog` once per profile instead of twice
 4. **Statistics Sheet**: Intentional redundancy retained - auto-calculated aggregate for performance, refreshed daily at midnight
+
+### App-Only Sheets Removed (2026-02)
+ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, and BookingTypeMeta are no longer synced from Google Sheets. These are edited only in the app and stored in Supabase directly. Sync script and docs updated.
 
 ---
 

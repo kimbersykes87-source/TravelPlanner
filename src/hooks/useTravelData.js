@@ -14,7 +14,6 @@ export function useTravelData() {
     bookedUpcoming: [],
     bookingTypeMeta: [],
     visaRules: [],
-    scenarioCacheSummary: [],
     preRelationshipCountries: [],
     bucketList: [],
   });
@@ -44,7 +43,6 @@ export function useTravelData() {
         supabase.from('booked_upcoming').select('*'),
         supabase.from('booking_type_meta').select('*'),
         supabase.from('visa_rules').select('*'),
-        supabase.from('scenario_cache_summary').select('*'),
         supabase.from('pre_relationship_countries').select('*'),
         supabase.from('bucket_list').select('*'),
       ]);
@@ -63,9 +61,8 @@ export function useTravelData() {
         bookedUpcoming: unwrap(results[8]),
         bookingTypeMeta: unwrap(results[9]),
         visaRules: unwrap(results[10]),
-        scenarioCacheSummary: unwrap(results[11]),
-        preRelationshipCountries: unwrap(results[12]),
-        bucketList: unwrap(results[13]),
+        preRelationshipCountries: unwrap(results[11]),
+        bucketList: unwrap(results[12]),
       });
     } catch (err) {
       setError(err?.message || 'Failed to load data');

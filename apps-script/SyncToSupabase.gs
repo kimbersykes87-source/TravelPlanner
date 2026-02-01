@@ -61,20 +61,14 @@ function syncAllSheetsToSupabase(baseUrl, anonKey) {
   };
 
   const tables = [
-    { sheet: getSheet_(ss, 'Profiles'), table: 'profiles', mapper: mapProfiles_ },
+    { sheet: getSheet_(ss, 'Profiles'), table: 'profiles', mapper: mapProfiles_, onConflict: 'profile_id' },
     { sheet: getSheet_(ss, 'Countries'), table: 'countries', mapper: mapCountries_, onConflict: 'country_name' },
     { sheet: getSheet_(ss, 'RelationshipLog'), table: 'relationship_log', mapper: mapRelationshipLog_, onConflict: 'date' },
-    { sheet: getSheet_(ss, 'Statistics'), table: 'statistics', mapper: mapStatistics_ },
-    { sheet: getSheet_(ss, 'PresentBookings'), table: 'present_bookings', mapper: mapPresentBookings_ },
-    { sheet: getSheet_(ss, 'FutureScenarios'), table: 'future_scenarios', mapper: mapFutureScenarios_ },
-    { sheet: getSheet_(ss, 'ScenarioStays'), table: 'scenario_stays', mapper: mapScenarioStays_, onConflict: 'scenario_id,stay_id' },
-    { sheet: getSheet_(ss, 'ToBook'), table: 'to_book', mapper: mapToBook_ },
-    { sheet: getSheet_(ss, 'BookedUpcoming'), table: 'booked_upcoming', mapper: mapBookedUpcoming_ },
-    { sheet: getSheet_(ss, 'BookingTypeMeta'), table: 'booking_type_meta', mapper: mapBookingTypeMeta_ },
-    { sheet: getSheet_(ss, 'VisaRules'), table: 'visa_rules', mapper: mapVisaRules_ },
-    { sheet: getSheet_(ss, 'ScenarioCacheSummary'), table: 'scenario_cache_summary', mapper: mapScenarioCacheSummary_, onConflict: 'scenario_id,jurisdiction' },
-    { sheet: getSheet_(ss, 'PreRelationshipCountries'), table: 'pre_relationship_countries', mapper: mapPreRelationshipCountries_ },
-    { sheet: getSheet_(ss, 'BucketList'), table: 'bucket_list', mapper: mapBucketList_ }
+    { sheet: getSheet_(ss, 'Statistics'), table: 'statistics', mapper: mapStatistics_, onConflict: 'country' },
+    { sheet: getSheet_(ss, 'PresentBookings'), table: 'present_bookings', mapper: mapPresentBookings_, onConflict: 'booking_id' },
+    { sheet: getSheet_(ss, 'VisaRules'), table: 'visa_rules', mapper: mapVisaRules_, onConflict: 'rule_id' },
+    { sheet: getSheet_(ss, 'PreRelationshipCountries'), table: 'pre_relationship_countries', mapper: mapPreRelationshipCountries_, onConflict: 'profile_id,country_name' },
+    { sheet: getSheet_(ss, 'BucketList'), table: 'bucket_list', mapper: mapBucketList_, onConflict: 'id' }
   ];
 
   let ok = 0;
@@ -240,12 +234,12 @@ function mapProfiles_(row, h) {
 }
 
 function mapCountries_(row, h) {
-  const name = col_(row, h, 'Country Name') || col_(row, h, 'CountryName') || col_(row, h, 'country_name') || col_(row, h, 'Country');
+  const name = col_(row, h, 'CountryName') || col_(row, h, 'Country Name') || col_(row, h, 'country_name') || col_(row, h, 'Country') || col_(row, h, 'Name');
   if (!name) return null;
   return {
-    country_name: name,
-    iso3: col_(row, h, 'Country Code') || col_(row, h, 'CountryCode') || col_(row, h, 'ISO3') || col_(row, h, 'iso3'),
-    iso2: col_(row, h, 'Alpha-2 Code') || col_(row, h, 'Alpha-2') || col_(row, h, 'ISO2') || col_(row, h, 'iso2')
+    country_name: String(name).trim(),
+    iso3: col_(row, h, 'Alpha3Code') || col_(row, h, 'Country Code') || col_(row, h, 'CountryCode') || col_(row, h, 'ISO3') || col_(row, h, 'iso3') || col_(row, h, 'Alpha-3') || col_(row, h, 'Alpha3'),
+    iso2: col_(row, h, 'Alpha2Code') || col_(row, h, 'Alpha-2 Code') || col_(row, h, 'Alpha-2') || col_(row, h, 'ISO2') || col_(row, h, 'iso2')
   };
 }
 
@@ -265,16 +259,15 @@ function mapRelationshipLog_(row, h) {
 function mapStatistics_(row, h) {
   const country = col_(row, h, 'Country') || col_(row, h, 'country');
   if (!country) return null;
+  // Skip summary section rows (not real country data)
+  const c = String(country).trim().toLowerCase();
+  if (['summary', 'kimber total countries', 'siona total countries', 'together total countries', 'last updated'].indexOf(c) >= 0) return null;
   const n = (v) => { const x = parseInt(v, 10); return isNaN(x) ? 0 : x; };
   const yesNo = (val) => (String(val || '').toLowerCase() === 'yes' || String(val || '').toLowerCase() === 'true' || String(val || '').toLowerCase() === '1');
   return {
     country: country,
     country_code: col_(row, h, 'Country_Code') || col_(row, h, 'Country Code') || col_(row, h, 'country_code') || col_(row, h, 'ISO3'),
-    kimber_days: n(col_(row, h, 'Kimber_Days') || col_(row, h, 'Kimber Days')),
-    siona_days: n(col_(row, h, 'Siona_Days') || col_(row, h, 'Siona Days')),
     together_days: n(col_(row, h, 'Together_Days') || col_(row, h, 'Together Days')),
-    total_days: n(col_(row, h, 'Total_Days') || col_(row, h, 'Total Days')),
-    rank: n(col_(row, h, 'Rank')) || null,
     kimber_visited: yesNo(col_(row, h, 'Kimber_Visited') || col_(row, h, 'Kimber Visited')),
     siona_visited: yesNo(col_(row, h, 'Siona_Visited') || col_(row, h, 'Siona Visited')),
     together_visited: yesNo(col_(row, h, 'Together_Visited') || col_(row, h, 'Together Visited'))
@@ -298,85 +291,6 @@ function mapPresentBookings_(row, h) {
   };
 }
 
-function mapFutureScenarios_(row, h) {
-  const id = col_(row, h, 'ScenarioID') || col_(row, h, 'scenario_id');
-  if (!id) return null;
-  return {
-    scenario_id: id,
-    headline: col_(row, h, 'ScenarioHeadline') || col_(row, h, 'headline'),
-    created_by: col_(row, h, 'ScenarioCreatedBy') || col_(row, h, 'created_by'),
-    rating: parseInt(col_(row, h, 'ScenarioRating') || col_(row, h, 'rating') || 0, 10) || null,
-    start_date: toIsoDate_(colRaw_(row, h, 'ScenarioStart')) || toIsoDate_(col_(row, h, 'ScenarioStart')) || toIsoDate_(col_(row, h, 'start')) || null,
-    end_date: toIsoDate_(colRaw_(row, h, 'ScenarioEnd')) || toIsoDate_(col_(row, h, 'ScenarioEnd')) || toIsoDate_(col_(row, h, 'end')) || null,
-    summary: col_(row, h, 'ScenarioSummary') || col_(row, h, 'summary'),
-    icon: col_(row, h, 'ScenarioIcon') || col_(row, h, 'icon'),
-    accommodation_type: col_(row, h, 'AccommodationType') || col_(row, h, 'accommodation_type')
-  };
-}
-
-function mapScenarioStays_(row, h) {
-  const sid = col_(row, h, 'ScenarioID') || col_(row, h, 'scenario_id');
-  const stayId = col_(row, h, 'StayID') || col_(row, h, 'stay_id');
-  if (!sid || !stayId) return null;
-  return {
-    scenario_id: sid,
-    stay_id: stayId,
-    profile_scope: col_(row, h, 'ProfileScope') || col_(row, h, 'profile_scope'),
-    country: col_(row, h, 'Country'),
-    city: col_(row, h, 'City'),
-    start_date: toIsoDate_(colRaw_(row, h, 'StartDate')) || toIsoDate_(col_(row, h, 'StartDate')) || null,
-    end_date: toIsoDate_(colRaw_(row, h, 'EndDate')) || toIsoDate_(col_(row, h, 'EndDate')) || null,
-    notes: col_(row, h, 'Notes'),
-    accommodation_type: col_(row, h, 'AccommodationType'),
-    route_notes: col_(row, h, 'RouteNotes'),
-    image_url: col_(row, h, 'ImageURL') || col_(row, h, 'Image Url') || col_(row, h, 'image_url')
-  };
-}
-
-function mapToBook_(row, h) {
-  const id = col_(row, h, 'TaskID') || col_(row, h, 'task_id');
-  if (!id) return null;
-  return {
-    task_id: id,
-    assignee: col_(row, h, 'Assignee'),
-    booking_type: col_(row, h, 'BookingType'),
-    start_date: toIsoDate_(colRaw_(row, h, 'StartDate')) || toIsoDate_(col_(row, h, 'StartDate')) || null,
-    end_date: toIsoDate_(colRaw_(row, h, 'EndDate')) || toIsoDate_(col_(row, h, 'EndDate')) || null,
-    instruction: col_(row, h, 'Instruction'),
-    deadline: toIsoDate_(colRaw_(row, h, 'Deadline')) || toIsoDate_(col_(row, h, 'Deadline')) || null,
-    notes: col_(row, h, 'Notes'),
-    status: col_(row, h, 'Status') || 'pending'
-  };
-}
-
-function mapBookedUpcoming_(row, h) {
-  const id = col_(row, h, 'BookingID') || col_(row, h, 'booking_id');
-  if (!id) return null;
-  return {
-    booking_id: id,
-    type: col_(row, h, 'Type'),
-    dates: col_(row, h, 'Dates'),
-    travellers: col_(row, h, 'Travellers'),
-    details: col_(row, h, 'Details'),
-    headline: col_(row, h, 'Headline'),
-    start_date: toIsoDate_(colRaw_(row, h, 'StartDate')) || toIsoDate_(col_(row, h, 'StartDate')) || null,
-    end_date: toIsoDate_(colRaw_(row, h, 'EndDate')) || toIsoDate_(col_(row, h, 'EndDate')) || null,
-    confirmation_data: col_(row, h, 'ConfirmationData'),
-    notes: col_(row, h, 'Notes'),
-    created_from_task: col_(row, h, 'CreatedFromTask')
-  };
-}
-
-function mapBookingTypeMeta_(row, h) {
-  const type = col_(row, h, 'Type') || col_(row, h, 'type');
-  if (!type) return null;
-  return {
-    type: type,
-    icon: col_(row, h, 'Icon'),
-    color: col_(row, h, 'Color')
-  };
-}
-
 function mapVisaRules_(row, h) {
   const id = col_(row, h, 'RuleID') || col_(row, h, 'rule_id');
   if (!id) return null;
@@ -388,18 +302,6 @@ function mapVisaRules_(row, h) {
     max_days: n(col_(row, h, 'MaxDays')),
     contiguous_territory: (col_(row, h, 'ContiguousTerritory') || '').toLowerCase() === 'yes',
     notes: col_(row, h, 'Notes')
-  };
-}
-
-function mapScenarioCacheSummary_(row, h) {
-  const sid = col_(row, h, 'ScenarioID') || col_(row, h, 'scenario_id');
-  const jur = col_(row, h, 'Jurisdiction') || col_(row, h, 'jurisdiction');
-  if (!sid || !jur) return null;
-  const n = (v) => { const x = parseInt(v, 10); return isNaN(x) ? null : x; };
-  return {
-    scenario_id: sid,
-    jurisdiction: jur,
-    days_remaining: n(col_(row, h, 'DaysRemaining')) ?? n(col_(row, h, 'days_remaining'))
   };
 }
 

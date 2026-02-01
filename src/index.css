@@ -76,19 +76,21 @@ input[type="month"],
 input[type="time"] {
   color-scheme: dark;
 }
+/* WebKit (Chrome, Safari, Edge): force white calendar icon */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="month"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+  filter: brightness(0) invert(1);
   cursor: pointer;
   opacity: 0.9;
 }
+/* Firefox: force white calendar icon */
 input[type="date"]::-moz-calendar-picker-indicator,
 input[type="datetime-local"]::-moz-calendar-picker-indicator,
 input[type="month"]::-moz-calendar-picker-indicator,
 input[type="time"]::-moz-calendar-picker-indicator {
-  filter: invert(1);
+  filter: brightness(0) invert(1);
   cursor: pointer;
   opacity: 0.9;
 }

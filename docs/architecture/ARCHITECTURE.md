@@ -141,9 +141,11 @@ To change `SPREADSHEET_ID` or add new variables:
 
 ---
 
-## 📊 Data Sheets
+## 📊 Data Sources
 
-The application reads from these Google Sheets:
+**v2 app:** Reads from **Supabase**. Google Sheets sync (via Apps Script) pushes data into Supabase. App-only data (ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, BookingTypeMeta) is edited in the app and stored in Supabase directly—no Sheets tabs.
+
+### Google Sheets synced to Supabase
 
 | Sheet Name | Purpose | Key Columns |
 |------------|---------|-------------|
@@ -151,13 +153,10 @@ The application reads from these Google Sheets:
 | `Countries` | Master country list | Country name, ISO3, ISO2, Flag URL |
 | `RelationshipLog` | Daily travel log (since 2023-09-30) | Date, KimberCountry, SionaCountry, Status |
 | `Statistics` | Auto-calculated country stats | Country, Days (Kimber/Siona/Both), Totals |
-| `ToBook` | Tasks to book | TaskID, Assignee, BookingType, Dates, Instructions |
-| `BookedUpcoming` | Confirmed bookings | BookingID, Type, Dates, Travellers, Details |
-| `FutureScenarios` | Planned travel scenarios | ScenarioID, Headline, Dates, CreatedBy, Rating |
-| `ScenarioStays` | Scenario itineraries | ScenarioID, StayID, Country, Dates, Notes |
-| `BookingTypeMeta` | Booking type metadata | Type, Icon, Color |
-| `VisaRules` | Visa rule definitions | RuleID, Country, Period, Limit, Notes |
-| `PresentBookings` | Current booking info | (Similar to BookedUpcoming) |
+| `PresentBookings` | Current travel bookings | BookingID, ProfileID, Type, Dates, Country |
+| `VisaRules` | Visa rule definitions | RuleID, Jurisdiction, WindowDays, MaxDays |
+| `PreRelationshipCountries` | Countries visited before relationship | ProfileID, CountryName |
+| `BucketList` | Bucket list items | User, Country, Description, Completed |
 
 ---
 

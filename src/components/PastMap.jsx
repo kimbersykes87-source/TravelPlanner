@@ -7,6 +7,7 @@ import { Icon } from './Icon';
 import 'leaflet/dist/leaflet.css';
 
 const NATURAL_EARTH_110M_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson';
+const MICROSTATES_URL = '/assets/data/microstates.geojson';
 
 const KEY_ITEMS = [
   { label: 'Together', color: '#28a745' },
@@ -24,6 +25,7 @@ const COUNTRY_NAME_ALIASES = {
 
 export function PastMap({ onLoad }) {
   const [geoJson, setGeoJson] = useState(null);
+  const [microstatesJson, setMicrostatesJson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const { data } = useTravelData();
@@ -139,9 +141,14 @@ export function PastMap({ onLoad }) {
   );
 
   useEffect(() => {
-    fetch(NATURAL_EARTH_110M_URL)
-      .then((r) => r.json())
-      .then(setGeoJson)
+    Promise.all([
+      fetch(NATURAL_EARTH_110M_URL).then((r) => r.json()),
+      fetch(MICROSTATES_URL).then((r) => r.json()),
+    ])
+      .then(([mainGeo, microstatesGeo]) => {
+        setGeoJson(mainGeo);
+        setMicrostatesJson(microstatesGeo);
+      })
       .catch(console.error)
       .finally(() => {
         setLoading(false);
@@ -200,6 +207,9 @@ export function PastMap({ onLoad }) {
           />
           {geoJson && (
             <GeoJSON data={geoJson} style={geoJsonStyle} onEachFeature={onEachFeature} />
+          )}
+          {microstatesJson && (
+            <GeoJSON data={microstatesJson} style={geoJsonStyle} onEachFeature={onEachFeature} />
           )}
         </MapContainer>
       </div>

@@ -24,9 +24,24 @@ const SCENARIO_ICONS = [
   { value: 'beach', label: 'Beach' },
   { value: 'camping', label: 'Camping' },
   { value: 'dining', label: 'Dining' },
-  { value: 'hiking', label: 'Hiking' },
-  { value: 'future', label: 'Future' },
+  { value: 'hikiing', label: 'Hiking' },
+  { value: 'mountains', label: 'Mountains' },
+  { value: 'nature', label: 'Nature' },
+  { value: 'resort', label: 'Resort' },
+  { value: 'roadTrip', label: 'Road Trip' },
+  { value: 'SilverSprings', label: 'Silver Springs' },
+  { value: 'snowboarding', label: 'Snowboarding' },
+  { value: 'sunny', label: 'Sunny' },
+  { value: 'tropical', label: 'Tropical' },
+  { value: 'vineyard', label: 'Vineyard' },
 ];
+
+const SCENARIO_ICON_PATH = (value) => {
+  const v = value || 'adventure';
+  const legacyMap = { hiking: 'hikiing', future: 'adventure' };
+  const file = legacyMap[v] || v;
+  return `/assets/scenario-icons/${file}.svg`;
+};
 
 const PROFILE_SCOPE_OPTIONS = [
   { value: 'both', label: 'Together' },
@@ -101,8 +116,8 @@ export function FutureScenarios() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [shareScenario, setShareScenario] = useState(null);
-  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [detailScenario, setDetailScenario] = useState(null);
+  const [scenarioIconOpen, setScenarioIconOpen] = useState(false);
   const [scenario, setScenario] = useState(defaultScenario);
   const [stays, setStays] = useState([]);
   const [validation, setValidation] = useState(null);
@@ -191,11 +206,13 @@ export function FutureScenarios() {
     setStays([defaultStay()]);
     setValidation(null);
     setSaveError('');
+    setScenarioIconOpen(false);
     setShowEditor(true);
   };
 
   const openEdit = (sc) => {
     setEditingId(sc.scenario_id);
+    setScenarioIconOpen(false);
     setScenario({
       headline: sc.headline || '',
       created_by: normalizeCreatedBy(sc.created_by),
@@ -230,23 +247,8 @@ export function FutureScenarios() {
     setEditingId(null);
   };
 
-  const openShareView = (sc) => {
-    setShareScenario(sc);
-    setShareLinkCopied(false);
-  };
-  const closeShareView = () => {
-    setShareScenario(null);
-    setShareLinkCopied(false);
-  };
-  const shareViewUrl = typeof window !== 'undefined' ? `${window.location.origin}/view` : '/view';
-  const copyShareLink = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(shareViewUrl).then(() => {
-        setShareLinkCopied(true);
-        setTimeout(() => setShareLinkCopied(false), 2000);
-      });
-    }
-  };
+  const openShareView = (sc) => setShareScenario(sc);
+  const closeShareView = () => setShareScenario(null);
   const openDetailView = (sc) => setDetailScenario(sc);
   const closeDetailView = () => setDetailScenario(null);
 
@@ -411,7 +413,12 @@ export function FutureScenarios() {
               flexShrink: 0,
             }}
           >
-            <Icon name="route" size={24} style={{ color: '#fff' }} />
+            <img
+              src={SCENARIO_ICON_PATH(sc.icon)}
+              alt=""
+              style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              onError={(e) => { e.target.src = '/assets/scenario-icons/adventure.svg'; }}
+            />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{(sc.headline || 'Untitled').toUpperCase()}</h3>
@@ -421,21 +428,23 @@ export function FutureScenarios() {
           </div>
         </div>
         {!isViewer && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, justifyContent: 'flex-end' }}>
           <button
             type="button"
             onClick={() => openEdit(sc)}
+            aria-label="Edit scenario"
             style={{
-              padding: '8px 14px',
-              background: 'var(--color-bg-quaternary)',
+              padding: 8,
+              background: 'none',
               color: 'var(--color-text-secondary)',
               border: 'none',
-              borderRadius: 8,
-              fontSize: 14,
               cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            Edit
+            <Icon name="pencil" size={20} style={{ color: 'var(--color-text-secondary)' }} />
           </button>
           <button
             type="button"
@@ -450,7 +459,6 @@ export function FutureScenarios() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginLeft: 'auto',
             }}
           >
             <Icon name="delete" size={20} style={{ color: 'var(--color-error)' }} />
@@ -595,7 +603,7 @@ export function FutureScenarios() {
               cursor: 'pointer',
             }}
           >
-            Scenario overview
+            Share
           </button>
           {!isViewer && (
           <button
@@ -613,7 +621,7 @@ export function FutureScenarios() {
               cursor: 'pointer',
             }}
           >
-            Visa check
+            Details
           </button>
           )}
         </div>
@@ -761,17 +769,79 @@ export function FutureScenarios() {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>SCENARIO ICON</label>
-                <select
-                  value={scenario.icon}
-                  onChange={(e) => setScenario((s) => ({ ...s, icon: e.target.value }))}
-                  style={inputStyle}
-                >
-                  {SCENARIO_ICONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setScenarioIconOpen((o) => !o)}
+                    style={{
+                      ...inputStyle,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                      width: '100%',
+                      justifyContent: 'flex-start',
+                    }}
+                  >
+                    <img
+                      src={SCENARIO_ICON_PATH(scenario.icon)}
+                      alt=""
+                      style={{ width: 18, height: 18, objectFit: 'contain', filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                      onError={(e) => { e.target.src = '/assets/scenario-icons/adventure.svg'; }}
+                    />
+                    {SCENARIO_ICONS.find((o) => o.value === scenario.icon)?.label || 'Adventure'}
+                  </button>
+                  {scenarioIconOpen && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        marginTop: 4,
+                        background: 'var(--color-bg-tertiary)',
+                        border: '1px solid var(--color-bg-quaternary)',
+                        borderRadius: 8,
+                        maxHeight: 280,
+                        overflowY: 'auto',
+                        zIndex: 10,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                      }}
+                    >
+                      {SCENARIO_ICONS.map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => {
+                            setScenario((s) => ({ ...s, icon: o.value }));
+                            setScenarioIconOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            width: '100%',
+                            padding: '10px 12px',
+                            background: scenario.icon === o.value ? 'var(--color-bg-quaternary)' : 'transparent',
+                            border: 'none',
+                            color: '#fff',
+                            fontSize: 14,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <img
+                            src={SCENARIO_ICON_PATH(o.value)}
+                            alt=""
+                            style={{ width: 18, height: 18, objectFit: 'contain', filter: 'brightness(0) invert(1)', flexShrink: 0 }}
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>OVERVIEW / NOTES</label>
@@ -1103,8 +1173,8 @@ export function FutureScenarios() {
               justifyContent: 'center',
               padding: 'min(20px, 3vw)',
               background: 'var(--color-bg-primary)',
-              overflow: 'auto',
-              minHeight: '100dvh',
+              overflow: 'hidden',
+              height: '100dvh',
             }}
             onClick={(e) => e.target === e.currentTarget && closeShareView()}
           >
@@ -1134,11 +1204,12 @@ export function FutureScenarios() {
               style={{
                 width: '100%',
                 maxWidth: 520,
+                height: '100%',
+                maxHeight: '100dvh',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 16,
+                gap: 12,
                 flex: 1,
-                justifyContent: 'center',
                 minHeight: 0,
               }}
               onClick={(e) => e.stopPropagation()}
@@ -1150,15 +1221,18 @@ export function FutureScenarios() {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   textAlign: 'center',
+                  flexShrink: 0,
                 }}
               >
                 {(sc.headline || 'Untitled').toUpperCase()}
               </h2>
               <div
                 style={{
-                  fontSize: 'clamp(14px, 2.5vw, 16px)',
-                  color: 'var(--color-text-secondary)',
+                  fontSize: 'clamp(20px, 5vw, 28px)',
+                  fontWeight: 600,
+                  color: 'var(--color-text-primary)',
                   textAlign: 'center',
+                  flexShrink: 0,
                 }}
               >
                 {shareStart && shareEnd
@@ -1167,74 +1241,26 @@ export function FutureScenarios() {
               </div>
               <div
                 style={{
-                  fontSize: 'clamp(12px, 2vw, 14px)',
-                  color: 'var(--color-text-tertiary)',
+                  fontSize: 'clamp(16px, 3vw, 20px)',
+                  fontFamily: 'var(--font-handwritten)',
+                  fontWeight: 600,
+                  color: 'var(--color-text-secondary)',
                   textAlign: 'center',
+                  flexShrink: 0,
                 }}
               >
-                Created by Jenny
+                Created by {normalizeCreatedBy(sc.created_by)}
               </div>
-              {!isViewer && (
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
-                  marginTop: 8,
-                  padding: '12px 16px',
-                  background: 'var(--color-bg-tertiary)',
-                  borderRadius: 12,
+                  flex: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ fontSize: 'clamp(12px, 2vw, 14px)', color: 'var(--color-text-secondary)', fontWeight: 600 }}>
-                  Share this link:
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <code
-                    style={{
-                      flex: '1 1 auto',
-                      minWidth: 0,
-                      fontSize: 'clamp(12px, 2vw, 14px)',
-                      color: 'var(--color-text-primary)',
-                      wordBreak: 'break-all',
-                      padding: '8px 12px',
-                      background: 'var(--color-bg-primary)',
-                      borderRadius: 8,
-                      border: '1px solid var(--color-bg-quaternary)',
-                    }}
-                  >
-                    {shareViewUrl}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={copyShareLink}
-                    aria-label={shareLinkCopied ? 'Copied' : 'Copy link'}
-                    style={{
-                      flexShrink: 0,
-                      padding: '8px 16px',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: 'var(--color-text-primary)',
-                      background: shareLinkCopied ? 'var(--color-success, #22c55e)' : 'var(--color-bg-quaternary)',
-                      border: 'none',
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {shareLinkCopied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                 {shareStays.map((stay, i) => {
                   const iso2 = getCountryIso2(stay.country, countries);
                   return (
@@ -1244,7 +1270,8 @@ export function FutureScenarios() {
                         position: 'relative',
                         borderRadius: 10,
                         overflow: 'hidden',
-                        minHeight: 56,
+                        flex: 1,
+                        minHeight: 0,
                         background: stay.image_url
                           ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.5)), url(${stay.image_url}) center/cover`
                           : 'var(--color-bg-tertiary)',
@@ -1364,7 +1391,7 @@ export function FutureScenarios() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Visa check"
+            aria-label="Scenario details"
             style={{
               position: 'fixed',
               inset: 0,

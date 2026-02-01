@@ -51,7 +51,7 @@ const NAME_TO_ISO2 = {
   croatia: 'HR', serbia: 'RS', bulgaria: 'BG', ukraine: 'UA', russia: 'RU',
   'united arab emirates': 'AE', israel: 'IL', 'saudi arabia': 'SA',
   fiji: 'FJ', 'papua new guinea': 'PG', philippines: 'PH',
-  andorra: 'AD',
+  andorra: 'AD', kosovo: 'XK',
 };
 
 /** Natural Earth / UN long names -> common short names for Statistics lookup. */

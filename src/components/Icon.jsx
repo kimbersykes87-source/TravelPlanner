@@ -35,6 +35,7 @@ const ICON_MAP = {
   'x-close': 'x-close',
   'arrow-right-left': 'arrow-right-left',
   delete: 'delete',
+  pencil: 'pencil',
 };
 
 const BASE = import.meta.env.BASE_URL || '/';

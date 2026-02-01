@@ -63,6 +63,7 @@ export function PresentToBook() {
   const [saving, setSaving] = useState(false);
   const [moveToBookedTask, setMoveToBookedTask] = useState(null);
   const [moveToBookedForm, setMoveToBookedForm] = useState(null);
+  const [detailTask, setDetailTask] = useState(null);
 
   const tasks = data?.toBookTasks || [];
   const today = todayIso();
@@ -188,6 +189,20 @@ export function PresentToBook() {
     return parsed ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   };
 
+  const TaskDetailRow = ({ label, value, multiline }) => {
+    if (value == null || String(value).trim() === '') return null;
+    return (
+      <div>
+        <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
+        </div>
+        <div style={{ color: 'var(--color-text-primary)', whiteSpace: multiline ? 'pre-wrap' : 'normal', wordBreak: 'break-word' }}>
+          {String(value).trim()}
+        </div>
+      </div>
+    );
+  };
+
   const getDeadlineStatus = (deadlineStr) => {
     if (!deadlineStr) return { label: null, isOverdue: false };
     const dl = String(deadlineStr).slice(0, 10);
@@ -201,37 +216,60 @@ export function PresentToBook() {
     return { label: `Due in ${daysLeft}d`, isOverdue: false };
   };
 
+  const cardBaseStyle = (isOverdue) => ({
+    padding: 0,
+    background: isOverdue ? 'rgba(239, 68, 68, 0.08)' : 'var(--color-bg-tertiary, #2a2a2a)',
+    borderRadius: 10,
+    marginBottom: 12,
+    borderLeft: `4px solid ${isOverdue ? 'var(--color-error, #ef4444)' : 'var(--color-primary, #3b82f6)'}`,
+    overflow: 'hidden',
+    width: '100%',
+    cursor: 'pointer',
+  });
+
+  const cardHeaderStyle = (isOverdue) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '12px 14px',
+    background: isOverdue ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-bg-quaternary, #3a3a3a)',
+    borderBottom: '1px solid var(--color-bg-tertiary)',
+  });
+
+  const cardBodyStyle = { padding: '12px 14px' };
+
   const TaskCard = ({ task }) => {
     const typeIcon = BOOKING_TYPE_ICON[task.booking_type] || 'plane';
     const { label: deadlineLabel, isOverdue } = getDeadlineStatus(task.deadline);
-    const borderColor = isOverdue ? 'var(--color-error, #ef4444)' : 'var(--color-primary, #3b82f6)';
+    const displayHeadline = task.instruction?.slice(0, 80) || task.booking_type || 'Task';
     return (
       <div
-        style={{
-          padding: 0,
-          background: isOverdue ? 'rgba(239, 68, 68, 0.08)' : 'var(--color-bg-tertiary, #2a2a2a)',
-          borderRadius: 10,
-          marginBottom: 12,
-          borderLeft: `4px solid ${borderColor}`,
-          overflow: 'hidden',
-          width: '100%',
-        }}
+        role="button"
+        tabIndex={0}
+        onClick={() => setDetailTask(task)}
+        onKeyDown={(e) => e.key === 'Enter' && setDetailTask(task)}
+        style={cardBaseStyle(isOverdue)}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 14px',
-            background: isOverdue ? 'rgba(239, 68, 68, 0.12)' : 'var(--color-bg-quaternary, #3a3a3a)',
-            borderBottom: '1px solid var(--color-bg-tertiary)',
-          }}
-        >
+        <div style={cardHeaderStyle(isOverdue)}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Icon name={typeIcon} size={18} style={{ color: 'var(--color-text-tertiary)' }} />
             <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: 15 }}>
               {task.booking_type}
             </span>
+            {task.assignee && (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'var(--color-text-tertiary)',
+                  background: 'var(--color-bg-tertiary)',
+                  padding: '3px 8px',
+                  borderRadius: 12,
+                }}
+              >
+                {task.assignee}
+              </span>
+            )}
             {deadlineLabel && (
               <span
                 style={{
@@ -248,7 +286,7 @@ export function PresentToBook() {
             )}
           </div>
           {!isViewer && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => openMoveToBooked(task)}
@@ -276,14 +314,20 @@ export function PresentToBook() {
           </div>
           )}
         </div>
-        <div style={{ padding: '12px 14px' }}>
-          {(task.start_date || task.deadline) && (
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+        <div style={cardBodyStyle}>
+          <div style={{ fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+            {displayHeadline}
+            {task.instruction && task.instruction.length > 80 ? '…' : ''}
+          </div>
+          {(task.start_date || task.end_date || task.deadline) && (
+            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: task.instruction && task.instruction.length > 80 ? 4 : 0 }}>
               {task.start_date && formatDate(task.start_date)}
+              {task.start_date && task.end_date && ' → '}
+              {task.end_date && formatDate(task.end_date)}
               {task.deadline && ` · Due ${formatDate(task.deadline)}`}
             </div>
           )}
-          {task.instruction && (
+          {task.instruction && task.instruction.length > 80 && (
             <div
               style={{
                 fontSize: 13,
@@ -334,7 +378,6 @@ export function PresentToBook() {
     <LoadingState loading={loading}>
       <div>
         <h1>TO BOOK</h1>
-      <p>Tasks to book</p>
 
       {!isViewer && (
       <div style={{ marginBottom: 16 }}>
@@ -566,6 +609,113 @@ export function PresentToBook() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {detailTask && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="task-detail-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            background: 'rgba(0,0,0,0.6)',
+          }}
+          onClick={() => setDetailTask(null)}
+        >
+          <div
+            style={{
+              background: 'var(--color-bg-secondary)',
+              borderRadius: 16,
+              border: '1px solid var(--color-bg-tertiary)',
+              padding: 24,
+              maxWidth: 420,
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <h2 id="task-detail-title" style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>
+                {detailTask.instruction?.slice(0, 80) || detailTask.booking_type || 'Task'}
+                {detailTask.instruction && detailTask.instruction.length > 80 ? '…' : ''}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setDetailTask(null)}
+                aria-label="Close"
+                style={{ ...iconBtnStyle, marginTop: -4 }}
+              >
+                <Icon name="x-close" size={20} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 14 }}>
+              <TaskDetailRow label="Booking Type" value={detailTask.booking_type} />
+              <TaskDetailRow label="Assignee" value={detailTask.assignee} />
+              <TaskDetailRow label="Start Date" value={detailTask.start_date ? formatDate(detailTask.start_date) : null} />
+              <TaskDetailRow label="End Date" value={detailTask.end_date ? formatDate(detailTask.end_date) : null} />
+              <TaskDetailRow label="Deadline" value={detailTask.deadline ? formatDate(detailTask.deadline) : null} />
+              <TaskDetailRow label="Instruction" value={detailTask.instruction} multiline />
+              <TaskDetailRow label="Notes" value={detailTask.notes} multiline />
+            </div>
+            {!isViewer && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 20, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => { openEdit(detailTask); setDetailTask(null); }}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--color-primary)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { openMoveToBooked(detailTask); setDetailTask(null); }}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'var(--color-bg-tertiary)',
+                    color: 'var(--color-text-primary)',
+                    border: '1px solid var(--color-bg-quaternary)',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Move to Booked
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { handleDelete(detailTask.task_id); setDetailTask(null); }}
+                  style={{
+                    padding: '10px 16px',
+                    background: 'transparent',
+                    color: 'var(--color-error)',
+                    border: '1px solid var(--color-error)',
+                    borderRadius: 8,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

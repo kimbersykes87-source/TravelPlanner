@@ -24,7 +24,7 @@ export function useTravelData() {
   async function load() {
     if (!supabase) {
       setError(
-        'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables. See .env.example for reference.'
+        'Supabase is not configured. In Cloudflare Pages: Settings → Environment variables, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (use the same values as in .env.local), then trigger a new deploy so the build includes them. Until then, data will not load and edits will not save.'
       );
       setLoading(false);
       return;

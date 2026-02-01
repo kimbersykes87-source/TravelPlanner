@@ -46,9 +46,10 @@ const ICON_PATH_OVERRIDE = {
 
 export function Icon({ name, size = 24, className = '', style = {}, ...props }) {
   const file = ICON_MAP[name] || name;
-  const src = ICON_PATH_OVERRIDE[name]
+  const raw = ICON_PATH_OVERRIDE[name]
     ? `${BASE}${ICON_PATH_OVERRIDE[name]}`
     : `${BASE}assets/icons/v2/${file}.svg`;
+  const src = raw.startsWith('/') ? raw : `/${raw}`;
 
   return (
     <span

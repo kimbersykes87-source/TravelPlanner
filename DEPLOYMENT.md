@@ -1,5 +1,11 @@
 # Travel Planner v2 - Deployment
 
+## Supabase env vars (required for data and edits)
+
+**VITE_SUPABASE_URL** and **VITE_SUPABASE_ANON_KEY** must be set in Cloudflare Pages (Settings → Environment variables). If they are not set, the built app cannot connect to Supabase: you get "Supabase is not configured" on mobile/desktop and **no edits are saved**. Add both variables, then trigger a new deploy (build) so they are baked into the bundle.
+
+---
+
 ## Cloudflare build settings (required)
 
 **Build command:** `npm run build`  

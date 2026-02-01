@@ -18,6 +18,21 @@ This project (**TravelPlanner_v2**) is the **source of truth**. Deployment means
 
 ---
 
+## Required: Supabase env vars (data + edits)
+
+**For the app to load data and save edits**, Cloudflare must have these **build-time** environment variables set. If they are missing, the deployed app (including on mobile) will show "Supabase is not configured" and no edits will persist.
+
+1. **Cloudflare Dashboard** → Workers & Pages → **travelplanner-ks** → **Settings** → **Environment variables**.
+2. Add (for **Production** and **Preview** if you use both):
+   - **VITE_SUPABASE_URL** = your Supabase project URL (e.g. `https://xxxxx.supabase.co`)
+   - **VITE_SUPABASE_ANON_KEY** = your Supabase anon/public key
+3. Use the **same values** as in your local `.env.local`.
+4. **Trigger a new deploy** (e.g. push a commit, or Deployments → Retry). Vite bakes these into the build, so a new build is required after adding or changing them.
+
+After the new deploy, the app will connect to Supabase and all reads/writes (including edits) will work on desktop and mobile.
+
+---
+
 ## Required Cloudflare Pages settings (must be correct)
 
 If the live site shows **"Failed to load module script... MIME type of text/jsx"** or loads `main.jsx`, Cloudflare is **not** serving the build output. Fix it in the dashboard:

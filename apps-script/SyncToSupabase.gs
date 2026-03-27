@@ -180,8 +180,10 @@ function toIsoDate_(val) {
 function buildFrequentFlyer_(row, h, n) {
   var program = col_(row, h, 'FrequentFlyer' + n) || col_(row, h, 'Frequent Flyer ' + n) || col_(row, h, 'FF' + n);
   var number = col_(row, h, 'FrequentFlyer' + n + 'Number') || col_(row, h, 'Frequent Flyer ' + n + ' Number') ||
-    col_(row, h, 'FrequentFlyer' + n + 'No') || col_(row, h, 'Frequent Flyer ' + n + ' No');
-  var tier = col_(row, h, 'FrequentFlyer' + n + 'Tier') || col_(row, h, 'Frequent Flyer ' + n + ' Tier');
+    col_(row, h, 'FrequentFlyer' + n + 'No') || col_(row, h, 'Frequent Flyer ' + n + ' No') ||
+    col_(row, h, 'FFNumber' + n);
+  var tier = col_(row, h, 'FrequentFlyer' + n + 'Tier') || col_(row, h, 'Frequent Flyer ' + n + ' Tier') ||
+    col_(row, h, 'FFStatus' + n);
   if (!number) {
     var idx = headerIndex_(h, 'FrequentFlyer' + n);
     if (idx < 0) idx = headerIndex_(h, 'Frequent Flyer ' + n);
@@ -229,6 +231,7 @@ function mapProfiles_(row, h) {
     frequent_flyer_1: buildFrequentFlyer_(row, h, 1),
     frequent_flyer_2: buildFrequentFlyer_(row, h, 2),
     frequent_flyer_3: buildFrequentFlyer_(row, h, 3),
+    frequent_flyer_4: buildFrequentFlyer_(row, h, 4),
     profile_picture_url: col_(row, h, 'ProfilePictureURL')
   };
 }

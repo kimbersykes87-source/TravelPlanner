@@ -44,6 +44,7 @@ function ProfileCard({ profile, relationshipLog }) {
     profile.frequent_flyer_1 ?? profile.frequentFlyer1,
     profile.frequent_flyer_2 ?? profile.frequentFlyer2,
     profile.frequent_flyer_3 ?? profile.frequentFlyer3,
+    profile.frequent_flyer_4 ?? profile.frequentFlyer4,
   ].filter((ff) => ff != null && String(ff).trim() !== '');
 
   const VisaTile = ({ name, value, sub, warning }) => (

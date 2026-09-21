@@ -10,8 +10,9 @@ When the user says **deploy**, **redeploy**, **push to production**, or **deploy
 1. **Read** [docs/deployment/DEPLOY_INSTRUCTIONS.md](docs/deployment/DEPLOY_INSTRUCTIONS.md) (project root: `docs/deployment/DEPLOY_INSTRUCTIONS.md`).
 2. **Execute** the steps in order in the project folder `c:\dev\TravelPlanner_v2`:
    - Ensure git is initialized and remote `origin` is `https://github.com/kimbersykes87-source/TravelPlanner.git`.
+   - Run `npm test`, `npm run lint` and `npm run build`; stop and report if any fail.
    - Run `git add -A`, then `git commit -m "..."` with a clear message (skip commit if nothing to commit).
-   - Run `git branch -M feat/globe-loader`, then `git push -u origin feat/globe-loader --force`.
+   - Run `git branch -M feat/globe-loader`, then `git push -u origin feat/globe-loader --force-with-lease`.
 3. **Confirm** that the push succeeded; Cloudflare Pages will build and deploy from branch `feat/globe-loader`. Live site: https://travelplanner-ks.pages.dev
 
 Use PowerShell on Windows; use `;` not `&&` when chaining commands. The project folder is the single source of truth; do not use `c:\dev\TravelPlanner` for deployment.

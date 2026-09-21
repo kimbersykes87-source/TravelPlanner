@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
 const SUB_MENU_CONFIG = {
   past: [

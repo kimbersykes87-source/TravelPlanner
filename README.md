@@ -1,57 +1,40 @@
 # Travel Planner v2
 
-Digital Nomad Travel Planner — visa tracking, past travels, present bookings, future scenarios. React + Vite + Supabase, deployed on Cloudflare Pages.
+Kimber and Siona's private travel planner: visa and residency day counts,
+past travels, what needs booking, and future scenarios. React + Vite +
+Supabase, deployed on Cloudflare Pages, with the daily travel log kept in a
+Google Sheet.
 
----
+- **Live site:** https://travelplanner-ks.pages.dev
+- **Repo:** https://github.com/kimbersykes87-source/TravelPlanner (production branch `feat/globe-loader`)
+- **Project folder:** `C:\dev\TravelPlanner_v2` (source of truth)
 
 ## For future you / agents
 
-- **Project path:** `c:\dev\TravelPlanner_v2` (this repo is the **source of truth**)
-- **Deploy:** When the user says "deploy" or "redeploy", follow **[docs/deployment/DEPLOY_INSTRUCTIONS.md](docs/deployment/DEPLOY_INSTRUCTIONS.md)** and run the steps there (add, commit, push to `feat/globe-loader`)
-- **Live site:** https://travelplanner-ks.pages.dev  
-- **Repo:** https://github.com/kimbersykes87-source/TravelPlanner (branch `feat/globe-loader` for production)
-- **Docs:** All documentation is under **`docs/`** and folderised — see [docs/README.md](docs/README.md) for the index
-
----
+- **Deploy:** when asked to "deploy", follow [docs/deployment/DEPLOY_INSTRUCTIONS.md](docs/deployment/DEPLOY_INSTRUCTIONS.md).
+- **How it fits together:** [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
+- **Visa maths:** [docs/specs/VISA_RULES.md](docs/specs/VISA_RULES.md). Change rules only in `src/lib/visa/` and keep `npm test` green.
+- **Sheet sync:** [docs/setup/GOOGLE_SETUP.md](docs/setup/GOOGLE_SETUP.md).
+- **Sign-in and database security:** [docs/setup/AUTH_SETUP.md](docs/setup/AUTH_SETUP.md).
+- All docs: [docs/README.md](docs/README.md).
 
 ## Quick start
 
-```bash
-cd c:\dev\TravelPlanner_v2
-cp .env.example .env.local   # then fill in VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+```powershell
+cd C:\dev\TravelPlanner_v2
+copy .env.example .env.local   # then fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 npm install
-npm run dev                  # http://localhost:5173
+npm run dev                    # http://localhost:5173, sign in with your normal account
 ```
 
-**Build:** `npm run build` → output in `dist/`
-
----
+| Command | What it does |
+|---------|--------------|
+| `npm test` | Visa engine unit tests |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build into `dist/` |
 
 ## Environment
 
-- **Local:** Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (and optionally `VITE_APP_PASSWORD`, `VITE_VAPID_PUBLIC_KEY`)
-- **Cloudflare Pages:** Set the same `VITE_*` vars in Dashboard → Workers & Pages → travelplanner-ks → Settings → Environment variables, then **redeploy** so the build includes them (required for data and edits to work)
-
----
-
-## Documentation layout
-
-| Folder | Contents |
-|--------|----------|
-| [docs/deployment/](docs/deployment/) | Deploy steps, Cloudflare settings, before-you-deploy checklist |
-| [docs/setup/](docs/setup/) | Google Sheets sync, push notifications, webhooks |
-| [docs/specs/](docs/specs/) | Future scenarios spec, visa logic, viewer mode, design system, application summary |
-| [docs/architecture/](docs/architecture/) | System architecture and data flow |
-| [docs/audits/](docs/audits/) | Audit reports (Cloudflare, Lighthouse, phase) |
-| [docs/archive/](docs/archive/) | Historical migration / plan docs |
-
-Full index: **[docs/README.md](docs/README.md)**
-
----
-
-## Key links
-
-- [Deploy instructions (agents)](docs/deployment/DEPLOY_INSTRUCTIONS.md)
-- [Deployment overview](docs/deployment/DEPLOYMENT.md)
-- [Google Sheets → Supabase setup](docs/setup/GOOGLE_SETUP.md)
-- [Architecture](docs/architecture/ARCHITECTURE.md)
+- **Local:** `.env.local` (gitignored) with `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, optionally `VITE_VAPID_PUBLIC_KEY`.
+- **Cloudflare Pages:** the same `VITE_*` variables under Settings > Environment variables, then redeploy.
+- Anything starting with `VITE_` ends up in the browser. The service role key belongs only in Apps Script properties and Supabase function secrets.

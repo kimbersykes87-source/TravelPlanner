@@ -1,15 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTravelData } from '../hooks/useTravelData';
 import { PastMap as PastMapComponent } from '../components/PastMap';
 import { LoadingState } from '../components/LoadingState';
 
 export function PastMap() {
-  const { data, loading: dataLoading, error } = useTravelData();
+  const { loading: dataLoading, error } = useTravelData();
   const [mapReady, setMapReady] = useState(false);
-
-  useEffect(() => {
-    if (dataLoading) setMapReady(false);
-  }, [dataLoading]);
 
   const allLoading = dataLoading || !mapReady;
 

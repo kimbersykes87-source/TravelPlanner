@@ -2,22 +2,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTravelData } from '../hooks/useTravelData';
 import { upsertScenario, deleteScenario, newScenarioId, newStayId } from '../lib/supabaseWrites';
 import { parseLocalDate, daysBetween, addDays } from '../lib/dates';
-import { codeToIso2, ISO3_TO_ISO2 } from '../lib/countryFlags';
-import { isSchengen, isUs } from '../lib/visaCalculations';
-import { getVisaRemainingForCard } from '../lib/scenarioVisaValidation';
+import { countryToIso2 } from '../lib/countryFlags';
+import { isSchengen, isUsSoil as isUs } from '../lib/visa/jurisdictions';
+import { scenarioRemaining, validateScenario } from '../lib/visa/engine';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
-function getCountryIso2(country, countries = []) {
-  if (!country) return '';
-  const name = String(country).trim();
-  const byName = countries.find((c) => (c.country_name || '').trim().toLowerCase() === name.toLowerCase());
-  if (byName?.iso2) return (byName.iso2 || '').trim().toUpperCase();
-  const iso3 = (byName?.iso3 || '').toUpperCase();
-  if (iso3 && ISO3_TO_ISO2[iso3]) return ISO3_TO_ISO2[iso3];
-  return codeToIso2(name, countries, name) || '';
-}
+/** ISO2 for a stay/bucket-list country name (for the flag). */
+const getCountryIso2 = (country) => countryToIso2(country);
 
 const SCENARIO_ICONS = [
   { value: 'adventure', label: 'Adventure' },
@@ -81,11 +74,6 @@ const defaultScenario = {
   accommodation_type: '',
 };
 
-function formatDateLong(d) {
-  const parsed = d ? parseLocalDate(d) : null;
-  return parsed ? parsed.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
-}
-
 function formatDateShort(d) {
   const parsed = d ? parseLocalDate(d) : null;
   return parsed ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
@@ -102,14 +90,46 @@ function normalizeCreatedBy(v) {
   return v;
 }
 
+const VISA_STATUS_COLOR = {
+  ok: 'var(--color-primary)',
+  warning: 'var(--color-warning, #f59e0b)',
+  error: 'var(--color-error, #ef4444)',
+};
+
+/** One person + one rule in the Visa Check, e.g. "Kimber: Schengen, 12 days left". */
+function VisaCheckRow({ row }) {
+  const color = VISA_STATUS_COLOR[row.status] || VISA_STATUS_COLOR.ok;
+  const headline = row.remaining < 0 ? `${-row.remaining} days over` : `${row.remaining} days left`;
+  return (
+    <div
+      style={{
+        padding: '10px 14px',
+        background: 'var(--color-bg-tertiary)',
+        borderRadius: 8,
+        borderLeft: `4px solid ${color}`,
+        marginBottom: 8,
+        fontSize: 14,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+        <strong>{row.label}</strong>
+        <span style={{ color, fontWeight: 600 }}>{headline}</span>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 4 }}>
+        {row.baseline} days before the trip · peak {row.projected} of {row.limit}
+      </div>
+    </div>
+  );
+}
+
 export function FutureScenarios() {
   const { data, loading, error, refetch } = useTravelData();
   const { isViewer } = useViewer();
-  const scenarios = data?.futureScenarios || [];
-  const scenarioStays = data?.scenarioStays || [];
-  const countries = data?.countries || [];
-  const relationshipLog = data?.relationshipLog || [];
-  const visaRules = data?.visaRules || [];
+  const scenarios = data.futureScenarios;
+  const scenarioStays = data.scenarioStays;
+  const countries = data.countries;
+  const relationshipLog = data.relationshipLog;
+  const visaRules = data.visaRules;
 
   const [visaByScenario, setVisaByScenario] = useState({});
   const [visaCalculating, setVisaCalculating] = useState(true);
@@ -154,15 +174,12 @@ export function FutureScenarios() {
     const id = requestAnimationFrame(() => {
       const next = {};
       for (const sc of scenarios) {
-        const stays = getStaysForScenario(sc.scenario_id);
+        const stays = scenarioStays
+          .filter((s) => s.scenario_id === sc.scenario_id)
+          .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
         const { startDate, endDate } = deriveScenarioFromStays(stays);
         if (startDate && endDate && stays.length) {
-          next[sc.scenario_id] = getVisaRemainingForCard(
-            { start_date: startDate, end_date: endDate },
-            stays,
-            relationshipLog,
-            visaRules
-          );
+          next[sc.scenario_id] = scenarioRemaining(stays, relationshipLog, visaRules);
         } else {
           next[sc.scenario_id] = { schengenRemaining: null, usaRemaining: null };
         }
@@ -289,12 +306,15 @@ export function FutureScenarios() {
         errors.push(`Stay ${idx + 1} in ${s.country} (${start} → ${end}): end date must be on or after start date`);
       }
     }
-    const { startDate, endDate, durationDays } = deriveScenarioFromStays(validStays);
+    const { durationDays } = deriveScenarioFromStays(validStays);
     if (durationDays > 366) errors.push('Scenario duration cannot exceed 366 days');
+    // Visa limits are warnings, not blockers: a what-if plan can still be saved.
+    const visa = validStays.length ? validateScenario(validStays, relationshipLog, visaRules) : { errors: [], warnings: [], breakdown: [] };
+    warnings.push(...visa.errors, ...visa.warnings);
     const result = {
       errors,
       warnings,
-      breakdown: [],
+      breakdown: visa.breakdown,
       checked: true,
       valid: errors.length === 0,
     };
@@ -1065,7 +1085,7 @@ export function FutureScenarios() {
                     </>
                   ) : (
                     <>
-                      <div style={{ fontWeight: 600 }}>All checks passed!</div>
+                      <div style={{ fontWeight: 600 }}>{validation.warnings?.length > 0 ? 'Can be saved, but check these:' : 'All checks passed!'}</div>
                       {validation.warnings?.length > 0 && (
                         <ul style={{ margin: '8px 0 0', paddingLeft: 20, fontSize: 13 }}>
                           {validation.warnings.map((w, i) => (
@@ -1147,7 +1167,6 @@ export function FutureScenarios() {
         const scStays = getStaysForScenario(sc.scenario_id)
           .filter((s) => (s.country || '').trim() && s.start_date && s.end_date)
           .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
-        const { startDate, endDate } = deriveScenarioFromStays(scStays);
         const shareStays = scStays.map((s) => {
           let a = s.start_date;
           let b = s.end_date;
@@ -1378,8 +1397,6 @@ export function FutureScenarios() {
         const hasSchengen = staysByDate.some((s) => isSchengen(s.country));
         const hasUs = staysByDate.some((s) => isUs(s.country));
         const visaResult = visaByScenario[sc.scenario_id];
-        const schengenRemaining = visaResult?.schengenRemaining ?? null;
-        const usaRemaining = visaResult?.usaRemaining ?? null;
         const showVisaSpinner = (hasSchengen || hasUs) && visaCalculating && !visaResult;
         const travellerLabel = travellers.includes('both') && (travellers.includes('Kimber') || travellers.includes('Siona'))
           ? 'Kimber & Siona'
@@ -1509,17 +1526,10 @@ export function FutureScenarios() {
                       Calculating visa requirements…
                     </div>
                   )}
-                  {!showVisaSpinner && schengenRemaining != null && (
-                    <div style={{ padding: '10px 14px', background: 'var(--color-bg-tertiary)', borderRadius: 8, marginBottom: 8, fontSize: 14 }}>
-                      <strong>Schengen:</strong> {schengenRemaining} days remaining
-                    </div>
-                  )}
-                  {!showVisaSpinner && usaRemaining != null && (
-                    <div style={{ padding: '10px 14px', background: 'var(--color-bg-tertiary)', borderRadius: 8, fontSize: 14 }}>
-                      <strong>USA:</strong> {usaRemaining} days remaining
-                    </div>
-                  )}
-                  {!showVisaSpinner && schengenRemaining == null && usaRemaining == null && (hasSchengen || hasUs) && (
+                  {!showVisaSpinner && (visaResult?.breakdown || []).map((row) => (
+                    <VisaCheckRow key={`${row.profileId}-${row.ruleId}`} row={row} />
+                  ))}
+                  {!showVisaSpinner && (hasSchengen || hasUs) && !(visaResult?.breakdown || []).length && (
                     <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-tertiary)' }}>No visa limits for this scenario.</p>
                   )}
                   {!hasSchengen && !hasUs && (

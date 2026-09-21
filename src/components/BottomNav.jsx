@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Icon } from './Icon';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
 const navItems = [
   { to: '/us', name: 'us', label: 'Us', end: true },

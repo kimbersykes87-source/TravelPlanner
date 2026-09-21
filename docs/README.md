@@ -23,7 +23,8 @@ Setup guides for data sources and push.
 
 | File | Description |
 |------|-------------|
-| [GOOGLE_SETUP.md](setup/GOOGLE_SETUP.md) | Google Sheets + Apps Script → Supabase sync |
+| [GOOGLE_SETUP.md](setup/GOOGLE_SETUP.md) | Google Sheets + Apps Script → Supabase sync (checks, deletes, sync history) |
+| [AUTH_SETUP.md](setup/AUTH_SETUP.md) | **One-time rollout:** sign-in accounts, database lock-down, share-link function |
 | [WEBHOOKS_INSTALL_GUIDE.md](setup/WEBHOOKS_INSTALL_GUIDE.md) | Database webhooks for push notifications (5 webhooks) |
 | [PUSH_NOTIFICATIONS_SETUP.md](setup/PUSH_NOTIFICATIONS_SETUP.md) | Full push setup: VAPID, Edge Functions, webhooks, cron |
 | [REMAINING_PUSH_STEPS.md](setup/REMAINING_PUSH_STEPS.md) | Short checklist for finishing push setup |
@@ -36,9 +37,10 @@ Feature specs, behaviour, and design.
 
 | File | Description |
 |------|-------------|
-| [FUTURE_SCENARIOS_SPEC.md](specs/FUTURE_SCENARIOS_SPEC.md) | Future scenarios data model and visa logic |
-| [VISA_LOGIC_MIGRATION_DOC.md](specs/VISA_LOGIC_MIGRATION_DOC.md) | Visa logic migration from v1 to Supabase |
-| [VIEWER_MODE.md](specs/VIEWER_MODE.md) | View-only `/view` route and share link |
+| [VISA_RULES.md](specs/VISA_RULES.md) | **Current** visa and residency rules (ESTA, B1/B2, Schengen, UK tax year) |
+| [FUTURE_SCENARIOS_SPEC.md](specs/FUTURE_SCENARIOS_SPEC.md) | Future scenarios data model (visa section superseded by VISA_RULES.md) |
+| [VISA_LOGIC_MIGRATION_DOC.md](specs/VISA_LOGIC_MIGRATION_DOC.md) | Historical: visa logic migration from v1 |
+| [VIEWER_MODE.md](specs/VIEWER_MODE.md) | Read-only share link (`/view?k=…`) |
 | [DESIGN_SYSTEM.md](specs/DESIGN_SYSTEM.md) | Design tokens, colours, typography |
 | [APPLICATION_SUMMARY.md](specs/APPLICATION_SUMMARY.md) | High-level application summary |
 
@@ -73,3 +75,11 @@ Historical / reference docs.
 | File | Description |
 |------|-------------|
 | [travel_planner_supabase_migration_6a0f0b90.plan.md](archive/travel_planner_supabase_migration_6a0f0b90.plan.md) | Supabase migration plan (reference) |
+
+---
+
+## Reviews
+
+| File | Description |
+|------|-------------|
+| [SITE_REVIEW_2026-09.md](SITE_REVIEW_2026-09.md) | September 2026 review, findings and the work done |

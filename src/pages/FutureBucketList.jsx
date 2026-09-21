@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useTravelData } from '../hooks/useTravelData';
 import { upsertBucketListItem, deleteBucketListItem, newBucketListId } from '../lib/supabaseWrites';
-import { codeToIso2, ISO3_TO_ISO2 } from '../lib/countryFlags';
+import { countryToIso2 } from '../lib/countryFlags';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
 const BUCKET_ICONS = [
   { value: 'adventure', label: 'Adventure' },
@@ -28,15 +28,8 @@ const USER_OPTIONS = [
   { value: 'Siona', label: 'Siona' },
 ];
 
-function getCountryIso2(country, countries = []) {
-  if (!country) return '';
-  const name = String(country).trim();
-  const byName = countries.find((c) => (c.country_name || '').trim().toLowerCase() === name.toLowerCase());
-  if (byName?.iso2) return (byName.iso2 || '').trim().toUpperCase();
-  const iso3 = (byName?.iso3 || '').toUpperCase();
-  if (iso3 && ISO3_TO_ISO2[iso3]) return ISO3_TO_ISO2[iso3];
-  return codeToIso2(name, countries, name) || '';
-}
+/** ISO2 for a stay/bucket-list country name (for the flag). */
+const getCountryIso2 = (country) => countryToIso2(country);
 
 const defaultForm = () => ({
   user: 'Kimber',
@@ -51,8 +44,8 @@ const defaultForm = () => ({
 export function FutureBucketList() {
   const { data, loading, error, refetch } = useTravelData();
   const { isViewer } = useViewer();
-  const bucketList = data?.bucketList || [];
-  const countries = data?.countries || [];
+  const bucketList = data.bucketList;
+  const countries = data.countries;
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);

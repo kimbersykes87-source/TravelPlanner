@@ -8,7 +8,7 @@ This document analyzes the existing Future Scenarios visa logic so it can be rep
 
 | Topic | Key points |
 |-------|------------|
-| **ScenarioCacheSummary** | DISABLED. Cache is not used; validation runs on demand via `validateScenario`. `buildVisaSummaryRows_()` used today as reference; `validateScenarioVisaRules_()` uses scenario start for baseline and scenario end for remaining. |
+| **ScenarioCacheSummary** | REMOVED. Cache sheets and `rebuildScenarioCache()` were removed with 01/03/04 tabs; the time-based trigger was removed Feb 2026. Validation runs on demand via `validateScenario`. |
 | **DEFAULT_VISA_RULES** | US-ADMISSION (90/90), US-ROLLING365 (365/180), UK-TAX (365/120), SCHENGEN-ROLLING (180/90). `loadVisaRules_()` falls back to defaults if sheet missing/empty. |
 | **Jurisdiction / Profile** | Only show rules for jurisdictions with days in the scenario (`hasUSDays`, `hasSchengenDays`, `hasUKDays`). One breakdown row per (profile, rule). |
 | **"Days Remaining" source** | Live `validateScenario` API, not cache. Appears only in expanded scenario detail (visa table), not on collapsed card. |
@@ -18,17 +18,15 @@ This document analyzes the existing Future Scenarios visa logic so it can be rep
 
 ## 1. ScenarioCacheSummary Calculation
 
-### 1.1 Status: **DISABLED**
+### 1.1 Status: **REMOVED**
 
-The ScenarioCache sheets (`ScenarioCacheMetadata`, `ScenarioCacheDays`, `ScenarioCacheSummary`) are **not used** in the frontend. `rebuildScenarioCache()` returns immediately and does nothing. Data is calculated **on-demand** via `validateScenario` API.
+The ScenarioCache sheets (`ScenarioCacheMetadata`, `ScenarioCacheDays`, `ScenarioCacheSummary`) and the function `rebuildScenarioCache()` have been **removed**. They lived in `04-FUTURE-TAB.gs`, which was deleted with the 01/03/04 tabs. The time-based trigger for `rebuildScenarioCache` was removed in Feb 2026 to stop "Script function not found" errors. Data is calculated **on-demand** via `validateScenario` API (frontend/Supabase).
 
-**Source:** `04-FUTURE-TAB.gs` lines 834–837, 817–821; `APPLICATION_SUMMARY.md` line 342.
+**Source:** Historical; current Apps Script files are `00-ALL-TABS.gs`, `02-PAST-TAB.gs`, `SyncToSupabase.gs` only.
 
-### 1.2 How ScenarioCacheSummary Was Populated
+### 1.2 How ScenarioCacheSummary Was Populated (historical)
 
-`buildVisaSummaryRows_()` was called from `rebuildScenarioCache()` for each `(scenarioId, profileId)` pair. It produced rows written to the `ScenarioCacheSummary` sheet.
-
-**Entry point:** `rebuildScenarioCache()` (disabled) → `buildVisaSummaryRows_()` (lines 899–907).
+`buildVisaSummaryRows_()` was called from `rebuildScenarioCache()` for each `(scenarioId, profileId)` pair. It produced rows written to the `ScenarioCacheSummary` sheet. **Entry point (removed):** `rebuildScenarioCache()` → `buildVisaSummaryRows_()`.
 
 ### 1.3 `buildVisaSummaryRows_()` vs `validateScenarioVisaRules_()`
 
@@ -272,7 +270,7 @@ Do **not** use today-based remaining (as in `buildVisaSummaryRows_`) for scenari
 | UK | `02-PAST-TAB.gs` | `getTaxYearStartDay_`, `analyzeUKTax_` |
 | History | `02-PAST-TAB.gs` | `buildHistoryEntries_` |
 | Validation | `04-FUTURE-TAB.gs` | `validateScenarioVisaRules_`, `buildScenarioEntriesByProfile_`, `mergeHistoryAndScenarioEntries_`, `validateScenarioBundle_`, `validateScenarioPayload_` |
-| Cache (disabled) | `04-FUTURE-TAB.gs` | `rebuildScenarioCache`, `buildVisaSummaryRows_` |
+| Cache (removed) | — | `rebuildScenarioCache`, `buildVisaSummaryRows_` and trigger removed Feb 2026; files 01/03/04 removed |
 | API | `03-PRESENT-TAB.gs` | `validateScenario` action handler |
 | Frontend | `js/04-future-tab.js` | `validateScenarioRemote`, `computeScenarioVisaSummaryRows`, `renderScenarioDetail`, `buildScenarioDetailHtml` |
 | Frontend API | `js/00-all-tabs.js` | `validateScenarioRemote` |

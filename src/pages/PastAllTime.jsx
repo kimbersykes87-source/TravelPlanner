@@ -3,67 +3,17 @@ import { useTravelData } from '../hooks/useTravelData';
 import { Icon } from '../components/Icon';
 import { CountryChip } from '../components/CountryChip';
 import { LoadingState } from '../components/LoadingState';
-
-/** Resolve country_code (ISO2 or ISO3) to 2-letter code for flagcdn.com. Fallback: lookup by country name from countries table. */
-function codeToIso2(code, countries = [], countryName = '') {
-  const raw = (code || '').trim();
-  const upper = raw.toUpperCase();
-  if (raw.length === 2) return upper;
-  if (raw.length === 3) {
-    const byIso3 = countries.find((c) => (c.iso3 || '').toUpperCase() === upper);
-    if (byIso3?.iso2) return (byIso3.iso2 || '').trim().toUpperCase();
-    if (ISO3_TO_ISO2[upper]) return ISO3_TO_ISO2[upper];
-  }
-  const byName = (countryName && countries.length)
-    ? countries.find((c) => (c.country_name || '').trim().toLowerCase() === String(countryName).trim().toLowerCase())
-    : null;
-  return (byName?.iso2 || '').trim().toUpperCase();
-}
-
-const ISO3_TO_ISO2 = {
-  GBR: 'GB', USA: 'US', FRA: 'FR', DEU: 'DE', ITA: 'IT', ESP: 'ES', AUS: 'AU', CAN: 'CA', MEX: 'MX',
-  COL: 'CO', BRA: 'BR', ARG: 'AR', CHN: 'CN', JPN: 'JP', IND: 'IN', ZAF: 'ZA', NGA: 'NG', KEN: 'KE',
-  NLD: 'NL', BEL: 'BE', CHE: 'CH', AUT: 'AT', PRT: 'PT', GRC: 'GR', TUR: 'TR', IRL: 'IE', POL: 'PL',
-  CZE: 'CZ', ROU: 'RO', HUN: 'HU', BGR: 'BG', HRV: 'HR', SRB: 'RS', MNE: 'ME', MKD: 'MK', ALB: 'AL',
-  BIH: 'BA', SVN: 'SI', SVK: 'SK', LTU: 'LT', LVA: 'LV', EST: 'EE', FIN: 'FI', SWE: 'SE', NOR: 'NO',
-  DNK: 'DK', ISL: 'IS', ECU: 'EC', PER: 'PE', BOL: 'BO', CHL: 'CL', PRY: 'PY', URY: 'UY', VEN: 'VE',
-  CUB: 'CU', JAM: 'JM', HTI: 'HT', DOM: 'DO', PRI: 'PR', CRI: 'CR', PAN: 'PA', NIC: 'NI', HND: 'HN',
-  SLV: 'SV', GTM: 'GT', BLZ: 'BZ', THA: 'TH', VNM: 'VN', KHM: 'KH', MYS: 'MY', SGP: 'SG', IDN: 'ID',
-  PHL: 'PH', NZL: 'NZ', FJI: 'FJ', EGY: 'EG', MAR: 'MA', TUN: 'TN', ARE: 'AE', SAU: 'SA', ISR: 'IL', JOR: 'JO',
-  LBN: 'LB', RUS: 'RU', UKR: 'UA', GEO: 'GE', ARM: 'AM', AZE: 'AZ', KAZ: 'KZ', UZB: 'UZ', PAK: 'PK',
-  BGD: 'BD', LKA: 'LK', NPL: 'NP', GHA: 'GH', TZA: 'TZ', UGA: 'UG', ETH: 'ET',   ZWE: 'ZW', BWA: 'BW', NAM: 'NA', MOZ: 'MZ', AGO: 'AO', CIV: 'CI', SEN: 'SN', GMB: 'GM', MLI: 'ML',
-  TGO: 'TG', AND: 'AD', LUX: 'LU', MCO: 'MC', SMR: 'SM', VAT: 'VA', LIE: 'LI', MDA: 'MD', BLR: 'BY',
-};
-
-/** ISO2 -> continent for unique continent count */
-const ISO2_TO_CONTINENT = {
-  GB: 'Europe', US: 'North America', FR: 'Europe', DE: 'Europe', IT: 'Europe', ES: 'Europe', AU: 'Oceania', CA: 'North America', MX: 'North America',
-  CO: 'South America', BR: 'South America', AR: 'South America', CN: 'Asia', JP: 'Asia', IN: 'Asia', ZA: 'Africa', NG: 'Africa', KE: 'Africa',
-  NL: 'Europe', BE: 'Europe', CH: 'Europe', AT: 'Europe', PT: 'Europe', GR: 'Europe', TR: 'Asia', IE: 'Europe', PL: 'Europe',
-  CZ: 'Europe', RO: 'Europe', HU: 'Europe', BG: 'Europe', HR: 'Europe', RS: 'Europe', ME: 'Europe', MK: 'Europe', AL: 'Europe',
-  BA: 'Europe', SI: 'Europe', SK: 'Europe', LT: 'Europe', LV: 'Europe', EE: 'Europe', FI: 'Europe', SE: 'Europe', NO: 'Europe',
-  DK: 'Europe', IS: 'Europe', EC: 'South America', PE: 'South America', BO: 'South America', CL: 'South America', PY: 'South America', UY: 'South America', VE: 'South America',
-  CU: 'North America', JM: 'North America', HT: 'North America', DO: 'North America', PR: 'North America', CR: 'North America', PA: 'North America', NI: 'North America', HN: 'North America',
-  SV: 'North America', GT: 'North America', BZ: 'North America', TH: 'Asia', VN: 'Asia', KH: 'Asia', MY: 'Asia', SG: 'Asia', ID: 'Asia',
-  PH: 'Asia', NZ: 'Oceania', FJ: 'Oceania', EG: 'Africa', MA: 'Africa', TN: 'Africa', AE: 'Asia', SA: 'Asia', IL: 'Asia', JO: 'Asia',
-  LB: 'Asia', RU: 'Europe', UA: 'Europe', GE: 'Asia', AM: 'Asia', AZ: 'Asia', KZ: 'Asia', UZ: 'Asia', PK: 'Asia',
-  BD: 'Asia', LK: 'Asia', NP: 'Asia', GH: 'Africa', TZ: 'Africa', UG: 'Africa', ET: 'Africa', ZW: 'Africa', BW: 'Africa', NA: 'Africa', MZ: 'Africa', AO: 'Africa', CI: 'Africa', SN: 'Africa', GM: 'Africa', ML: 'Africa', TG: 'Africa', AD: 'Europe', LU: 'Europe', MC: 'Europe', SM: 'Europe', VA: 'Europe', LI: 'Europe', MD: 'Europe', BY: 'Europe',
-};
+import { codeToIso2, continentOf } from '../lib/countryFlags';
 
 function countContinents(countryList) {
-  const continents = new Set();
-  countryList.forEach((c) => {
-    const cont = ISO2_TO_CONTINENT[(c.iso2 || '').toUpperCase()] || 'Other';
-    continents.add(cont);
-  });
-  return continents.size;
+  return new Set(countryList.map((c) => continentOf(c.iso2)).filter((c) => c !== 'Other')).size;
 }
 
 export function PastAllTime() {
   const { data, loading, error } = useTravelData();
-  const statistics = data?.statistics || [];
-  const countries = data?.countries || [];
-  const profiles = data?.profiles || [];
+  const statistics = data.statistics;
+  const countries = data.countries;
+  const profiles = data.profiles;
 
   const togetherCountries = useMemo(() => {
     const seen = new Set();

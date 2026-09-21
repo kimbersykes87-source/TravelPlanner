@@ -67,6 +67,17 @@ cd c:\dev\TravelPlanner_v2
   ```
 - If remote already exists, skip.
 
+### 2b. Check before deploying (stop if anything fails)
+
+```powershell
+npm test
+npm run lint
+npm run build
+```
+
+- `npm test` checks the visa maths. Never deploy with a failing test.
+- If `npm install` has not been run since the last pull, run it first.
+
 ### 3. Stage all changes
 
 ```powershell
@@ -94,10 +105,10 @@ git branch -M feat/globe-loader
 ### 6. Push to trigger deployment
 
 ```powershell
-git push -u origin feat/globe-loader --force
+git push -u origin feat/globe-loader --force-with-lease
 ```
 
-- `--force` is used because this repo is the single source of truth; the remote branch is updated to match this folder.
+- `--force-with-lease` updates the remote to match this folder (the source of truth) but refuses if someone else pushed in the meantime, instead of silently overwriting it.
 - Cloudflare Pages is connected to this repo and branch; it will build and deploy after the push.
 
 ### 7. Confirm
@@ -113,11 +124,12 @@ After making changes, from any directory:
 
 ```powershell
 cd c:\dev\TravelPlanner_v2
+npm test; npm run lint; npm run build
 git add -A
 git status
 git commit -m "Deploy: describe your changes"
 git branch -M feat/globe-loader
-git push -u origin feat/globe-loader --force
+git push -u origin feat/globe-loader --force-with-lease
 ```
 
 If the repo was never initialized or has no remote:
@@ -129,7 +141,7 @@ git remote add origin https://github.com/kimbersykes87-source/TravelPlanner.git
 git add -A
 git commit -m "Deploy: initial or describe changes"
 git branch -M feat/globe-loader
-git push -u origin feat/globe-loader --force
+git push -u origin feat/globe-loader --force-with-lease
 ```
 
 ---

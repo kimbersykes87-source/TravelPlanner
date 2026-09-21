@@ -36,7 +36,7 @@ If your data is still in Google Sheets:
 3. Add the script from `apps-script/SyncToSupabase.gs` (see [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md))
 4. Add script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (from your `.env.local`)
 5. Run **Travel Planner → Sync to Supabase**
-6. *(Optional)* Add a daily trigger for `runScheduledSync` to keep Supabase active (7-day free tier)
+6. *(Optional)* Add a daily trigger for `runScheduledSync` to keep Supabase active (7-day free tier). Only add triggers for `runScheduledSync` and (if using Statistics refresh) `midnightRefreshStatistics`—do **not** add `rebuildScenarioCache` (removed Feb 2026).
 
 ### 3. Get Your Credentials for Cloudflare
 

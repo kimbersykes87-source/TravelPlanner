@@ -2,7 +2,7 @@
  * Timeline utilities – consolidate relationship_log into periods for display.
  */
 
-import { formatDdMmYy } from './visaCalculations';
+import { formatDdMmYy } from './format';
 
 /**
  * Consolidate consecutive same-country days into periods.

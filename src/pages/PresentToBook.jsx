@@ -4,7 +4,7 @@ import { upsertToBook, deleteToBook, newTaskId, moveToBooked } from '../lib/supa
 import { parseLocalDate, todayIso, daysBetween, addDays } from '../lib/dates';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
 const BOOKING_TYPES = ['Flight', 'Accommodation', 'Hire Car', 'Ferry', 'Train'];
 
@@ -65,7 +65,7 @@ export function PresentToBook() {
   const [moveToBookedForm, setMoveToBookedForm] = useState(null);
   const [detailTask, setDetailTask] = useState(null);
 
-  const tasks = data?.toBookTasks || [];
+  const tasks = data.toBookTasks;
   const today = todayIso();
 
   const sortByDeadline = (list) =>

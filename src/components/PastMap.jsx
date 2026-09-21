@@ -29,8 +29,8 @@ export function PastMap({ onLoad }) {
   const [loading, setLoading] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const { data } = useTravelData();
-  const statistics = data?.statistics || [];
-  const countries = data?.countries || [];
+  const statistics = data.statistics;
+  const countries = data.countries;
 
   const statsByCode = useMemo(() => {
     const m = new Map();

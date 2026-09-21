@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint .",
     "setup-push-cron": "node scripts/run-push-cron-setup.mjs",
     "copy-from-v1": "node scripts/copy-from-v1.cjs",
     "generate-icons": "node scripts/generate-pwa-icons.mjs",
-    "supabase": "supabase",
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "supabase": "supabase"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.93.3",
@@ -36,6 +37,7 @@
     "sharp": "^0.33.5",
     "supabase": "^2.74.5",
     "vite": "^7.2.4",
+    "vitest": "^3.2.7",
     "workbox-core": "^7.4.0",
     "workbox-precaching": "^7.4.0"
   }

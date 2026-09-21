@@ -4,7 +4,7 @@ import { upsertBookedUpcoming, deleteBookedUpcoming, newBookingId, moveToToBook 
 import { parseLocalDate, todayIso, addDays } from '../lib/dates';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
-import { useViewer } from '../contexts/ViewerContext';
+import { useViewer } from '../hooks/useViewer';
 
 const BOOKING_TYPES = ['Flight', 'Accommodation', 'Hire Car', 'Ferry', 'Train'];
 

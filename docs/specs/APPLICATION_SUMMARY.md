@@ -1,6 +1,6 @@
 # Fionas Kimberinho - Travel Planner Application Summary
 
-**Last Updated**: 2025-11-18  
+**Last Updated**: 2026-09-20  
 **Status**: Fully Functional Production Application (Deployed on Cloudflare Pages)
 
 ---
@@ -22,28 +22,25 @@
 ## 🏗️ Technical Architecture
 
 ### Frontend
-- **File**: `digital-nomad-planner.html` (4,337 lines)
-- **Technology Stack**:
-  - Single-page HTML application with embedded CSS and JavaScript
-  - Leaflet.js for interactive world maps
-  - Lottie Player for loading animations
-  - Responsive design with dark theme
+- **Stack**: React + Vite; source in `src/` (App.jsx, pages, components, hooks, lib)
+- **Technology**: React, Supabase client for data; Leaflet for maps; responsive design with dark theme
 
-### Backend (Google Sheets)
-- **Spreadsheet ID**: `1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8`
-- **Data Loading**: Via Cloudflare Pages Function (`/api/sheets`) - single aggregated API call
-- **Write Access**: Via Google Apps Script Web App (POST requests)
-- **Fallback**: CORS proxy if Cloudflare function unavailable
+### Backend
+- **Data**: Supabase (primary). Google Sheets data is synced to Supabase via Apps Script (`SyncToSupabase.gs`).
+- **Spreadsheet ID**: `1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8` (synced to Supabase; app-only data stored in Supabase only)
+- **Write Access**: Supabase (ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, etc.); Sheets sync is read-from-Sheets → push to Supabase
 
 ### Deployment
 - **Hosting**: Cloudflare Pages (`travelplanner-ks.pages.dev`)
 - **Branch**: `feat/globe-loader` (auto-deploys on push)
-- **Function**: `functions/api/sheets.js` (serverless read API)
+- **Build**: `npm run build` → `dist/`; env vars `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` required
 
 ### Google Apps Script Files
-1. **`statistics-manager.gs`** - Manages Statistics sheet calculations and midnight refresh
-2. **`create-travel-planner-sheet.gs`** - Initial spreadsheet setup and sheet creation
-3. **Write API handlers** - Handle POST requests for creating/updating/deleting bookings, scenarios, etc.
+1. **`00-ALL-TABS.gs`** - Shared utilities, country mapping, sheet name resolution
+2. **`02-PAST-TAB.gs`** - Statistics calculations, incremental refresh, midnight refresh (`midnightRefreshStatistics`, `setupMidnightRefresh`, `removeMidnightRefresh`)
+3. **`SyncToSupabase.gs`** - Sync Sheets → Supabase; menu and scheduled sync (`runScheduledSync`)
+
+Only two time-based triggers are used: `runScheduledSync` (optional daily) and `midnightRefreshStatistics` (optional 00:00). The `rebuildScenarioCache` function and trigger were removed (Feb 2026).
 
 ---
 
@@ -87,8 +84,8 @@
   - Country, Country_Code
   - Kimber_Days, Siona_Days, Together_Days, Total_Days
   - Rank, Kimber_Visited, Siona_Visited, Together_Visited
-- **Calculation**: Processed by `statistics-manager.gs`
-- **Refresh**: Automatic midnight refresh via trigger
+- **Calculation**: Processed by `02-PAST-TAB.gs` (incremental refresh)
+- **Refresh**: Automatic midnight refresh via trigger `midnightRefreshStatistics` (run `setupMidnightRefresh()` once to create)
 
 #### 6. **PresentBookings Sheet**
 - **Purpose**: Current travel bookings
@@ -124,6 +121,8 @@ These are edited in the app and stored in Supabase directly:
   - Frequent flyer programs (up to 3 per person)
 
 #### Visa Tracking System
+
+> Current rules and counting method: [VISA_RULES.md](VISA_RULES.md). The detail below is the original description and may be out of date.
 
 **UK Tax Days Tracking**
 - **Calculation**: Counts UK midnights in current UK tax year (April 6 - April 5)
@@ -238,17 +237,14 @@ These are edited in the app and stored in Supabase directly:
 ## 🔄 Data Flow
 
 ### Loading Process
-1. **Page Load**: App automatically loads after 1 second delay
-2. **Data Fetch**: Loads all 6 sheets in parallel using Promise.allSettled
-3. **CORS Handling**: Uses multiple proxy fallbacks:
-   - `https://api.allorigins.win/raw?url=`
-   - `https://corsproxy.io/?`
-4. **Error Handling**: Individual sheet failures don't break entire app
-5. **Display**: Data processed and displayed in respective tabs
+1. **Page Load**: React app loads; AuthContext/ViewerContext and hooks manage state
+2. **Data Fetch**: `useTravelData` and Supabase client fetch data from Supabase (profiles, countries, relationship_log, statistics, present_bookings, visa_rules, pre_relationship_countries, bucket_list; plus app-only tables for ToBook, BookedUpcoming, FutureScenarios, ScenarioStays)
+3. **Sheets → Supabase**: Google Sheets data is synced to Supabase via Apps Script (manual menu or daily trigger `runScheduledSync`); app does not read from Sheets directly
+4. **Display**: Data processed and displayed in respective tabs (Past, Present, Future, Us)
 
 ### Statistics Sheet Refresh
 - **Trigger**: Midnight refresh (00:00 daily) via Google Apps Script trigger
-- **Function**: `midnightRefreshStatistics()` in `statistics-manager.gs`
+- **Function**: `midnightRefreshStatistics()` in `02-PAST-TAB.gs`
 - **Process**:
   1. Processes RelationshipLog data up to current date (excludes future)
   2. Processes PreRelationshipCountries data
@@ -286,22 +282,14 @@ These are edited in the app and stored in Supabase directly:
 ## 📁 File Structure
 
 ```
-TravelPlanner/
-├── digital-nomad-planner.html      # Main application (4,337 lines)
-├── statistics-manager.gs            # Statistics calculations & midnight refresh
-├── create-travel-planner-sheet.gs   # Initial spreadsheet setup
-├── APPLICATION_SUMMARY.md           # This file (current application state)
-├── assets/
-│   ├── app-icons/
-│   │   └── icon.svg                 # Main app icon
-│   ├── icons/
-│   │   ├── us.svg                   # Us tab icon
-│   │   ├── past.svg                 # Past tab icon
-│   │   ├── present.svg              # Present tab icon
-│   │   └── future.svg               # Future tab icon
-│   └── lottie/
-│       ├── Globe.json               # Globe animation
-│       └── loading-earth-spinner.json  # Loading spinner animation
+TravelPlanner_v2/
+├── src/                             # React/Vite frontend
+├── apps-script/
+│   ├── 00-ALL-TABS.gs               # Shared utilities, country mapping
+│   ├── 02-PAST-TAB.gs               # Statistics, midnight refresh
+│   └── SyncToSupabase.gs            # Sheets → Supabase sync
+├── docs/specs/APPLICATION_SUMMARY.md  # This file (current application state)
+├── public/                          # Static assets (icons, GeoJSON, etc.)
 ```
 
 ---
@@ -309,33 +297,26 @@ TravelPlanner/
 ## 🔧 Setup & Deployment
 
 ### Running Locally
-1. **Open** `digital-nomad-planner.html` in a web browser
-   - Note: May encounter CORS issues with some browsers
-2. **Alternative**: Use local server:
-   ```bash
-   python -m http.server 8000
-   ```
-   Then navigate to: `http://localhost:8000/digital-nomad-planner.html`
+See the [README](../../README.md): `npm install`, `npm run dev`, sign in with your account.
 
 ### Google Sheets Setup
 1. **Spreadsheet**: Already exists at provided ID
-2. **Statistics Refresh**: Run `setupMidnightRefresh()` in Apps Script to enable automatic daily refresh
+2. **Statistics Refresh**: Run `setupMidnightRefresh()` in Apps Script (in `02-PAST-TAB.gs`) to enable automatic daily refresh
 3. **Manual Refresh**: Run `incrementalRefreshStatistics()` anytime
+4. **Triggers**: Only add `runScheduledSync` and/or `midnightRefreshStatistics`; do not add `rebuildScenarioCache` (removed Feb 2026)
 
 ---
 
 ## ⚠️ Known Limitations
 
-1. **Booking Persistence**: Present tab bookings are not saved to Google Sheets (local only)
-2. **Scenario Creation**: Future tab scenario creation form is placeholder only (being replaced by full CRUD workflow)
-3. **Data Write**: App is read-only (no write functionality to Sheets)
-4. **CORS**: Relies on proxy services for data loading (may fail if proxies are down)
+1. **Daily log lives in Google Sheets**: edits to RelationshipLog and Profiles are made in the Sheet and appear in the app after the next sync (daily, or Travel Planner > Sync to Supabase).
+2. **B1/B2 tracking is a guide**: each stay's legal limit is the I-94 date, which the app cannot know.
 
 ## 🔄 Recent Database Optimizations
 
 ### Redundancy Removals (2025-01-16)
 1. **ScenarioCalendar Sheet**: Removed - redundant day-level data derived from `ScenarioStays` on-demand
-2. **ScenarioCache Sheets**: Disabled - cache sheets (`ScenarioCacheMetadata`, `ScenarioCacheDays`, `ScenarioCacheSummary`) not used in frontend, data calculated on-demand from source sheets
+2. **ScenarioCache Sheets**: Removed - cache sheets and `rebuildScenarioCache()` were disabled; logic lived in removed files (01/03/04 tabs). Data is calculated on-demand. **Trigger removed Feb 2026** to stop "Script function not found: rebuildScenarioCache" errors.
 3. **Historical Data Processing**: Consolidated - `buildHistoryEntries_()` and `buildHistoricalVisaDayNumbers_()` now share a consolidated helper that reads `RelationshipLog` once per profile instead of twice
 4. **Statistics Sheet**: Intentional redundancy retained - auto-calculated aggregate for performance, refreshed daily at midnight
 
@@ -364,8 +345,9 @@ ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, and BookingTypeMeta are 
 
 ### Code Cleanup Completed
 - ✅ Removed unused `JSON.gs` file (app uses direct CSV export)
-- ✅ Cleaned up `statistics-manager.gs` (removed 22+ redundant functions)
+- ✅ Cleaned up statistics logic in `02-PAST-TAB.gs` (removed 22+ redundant functions from legacy statistics-manager)
 - ✅ Removed unused functions from HTML (formatDDMMYY_SLASH, calculateUpcomingSchengenDays, getResetDate)
+- ✅ `rebuildScenarioCache` function and time-based trigger removed (Feb 2026); scenario cache logic was in removed 01/03/04 tabs
 
 ---
 
@@ -373,10 +355,9 @@ ToBook, BookedUpcoming, FutureScenarios, ScenarioStays, and BookingTypeMeta are 
 
 - **GitHub Repository**: https://github.com/kimbersykes87-source/TravelPlanner
 - **Google Sheets**: https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit
-- **Local Server**: http://localhost:8000/digital-nomad-planner.html
 
 ---
 
 **Application Version**: 1.0 (Production Ready)  
-**Last Major Update**: 2025-01-16 (Code cleanup and statistics manager refactor)
+**Last Major Update**: 2026-02-03 (Docs: triggers, Apps Script files, rebuildScenarioCache removed; APPLICATION_SUMMARY aligned with v2 React/Supabase)
 

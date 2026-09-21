@@ -6,7 +6,7 @@
 |-------|--------|-------|
 | **0: Scaffold & Copy** | Done | React+Vite scaffolded; copy script runs; assets/docs in place |
 | **1: Supabase Schema** | Done | Migration pushed; 13 tables + RLS |
-| **2: Sheets Sync** | Done | SyncToSupabase.gs; daily trigger optional |
+| **2: Sheets Sync** | Done | SyncToSupabase.gs; daily trigger optional (runScheduledSync). Do not add rebuildScenarioCache (removed Feb 2026). |
 | **3: React PWA Foundation** | Done | manifest, vite-plugin-pwa, routing, bottom nav, sub-menu, Icon |
 | **4: Port UI & Data** | Partial | Password gate, useTravelData, UsPage shows profiles; many pages are placeholders |
 | **5: Map** | Done | Natural Earth 110m, getCountryIds, Leaflet |

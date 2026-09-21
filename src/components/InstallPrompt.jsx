@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const STORAGE_KEY = 'travel-planner-pwa-install-seen';
 
@@ -45,7 +45,8 @@ const ANDROID_INSTRUCTIONS = (
 
 export function InstallPrompt() {
   const { pathname } = useLocation();
-  const { unlocked } = useAuth();
+  const { session } = useAuth();
+  const unlocked = !!session;
   const [show, setShow] = useState(false);
   const [device, setDevice] = useState(null);
   const [deferredPrompt, setDeferredPrompt] = useState(null);

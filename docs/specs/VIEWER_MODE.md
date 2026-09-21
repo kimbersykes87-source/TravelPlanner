@@ -1,24 +1,27 @@
-# Viewer Mode
+# Viewer mode (read-only share link)
 
-A read-only version of the app for sharing with others (e.g. family, friends) who should browse content but not change anything.
+A read-only version of the app for family and friends.
 
-## How to share
+## Sharing
 
-**Share this link:** `https://your-domain.com/view`
+Us tab > **Read-only share link**:
 
-- No password required
-- All action buttons (Create, Edit, Delete) are hidden
-- US page shows "Hidden for obvious reasons" instead of passport/visa details
+- **Create link** makes a link like `https://travelplanner-ks.pages.dev/view?k=<token>`.
+- **Copy link** puts it on the clipboard.
+- **Make a new link** switches off the current link and creates a new one.
 
-## What viewers can do
+## What viewers see
 
-- Browse Past (all-time, relationship, map)
-- Browse Present (to-book tasks, booked items)
-- Browse Future (scenarios, bucket list)
-- Open "Scenario overview" and "Visa check" modals (read-only)
-- Use full navigation between sections
+- Past (All Time, Relationship, Map), Present (To Book, Booked), Future
+  (Scenarios, Bucket List), including Scenario overview.
+- No create, edit or delete buttons.
+- The Us tab says "Hidden for obvious reasons".
 
-## What viewers cannot do
+## What is never sent to viewers
 
-- Add, edit, or delete any data
-- See passport numbers, visa details, or personal info on the US page
+Passport numbers, US visa details, dates of birth, frequent-flyer numbers and
+UK work-day flags. The `viewer-data` Edge Function builds the viewer's data on
+the server with only the allowed columns; viewers have no access to the
+database itself.
+
+A link without a valid token shows "This share link is not valid".

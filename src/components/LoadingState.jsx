@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 
 const DELAY_MS = 500;
@@ -9,35 +9,24 @@ const MIN_DISPLAY_MS = 300;
  * Children stay mounted under a hidden overlay so async work completes before reveal.
  */
 export function LoadingState({ loading, delay = DELAY_MS, minDisplay = MIN_DISPLAY_MS, message = 'Loading…', children }) {
-  const [showSpinner, setShowSpinner] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(() => loading);
-  const spinnerShownRef = useRef(false);
+  // Spinner appears only if loading lasts longer than `delay`, then stays for
+  // at least `minDisplay` so it never flickers.
+  const [spinnerShown, setSpinnerShown] = useState(false);
 
   useEffect(() => {
-    if (loading) {
-      spinnerShownRef.current = false;
-      setShowOverlay(true);
-      setShowSpinner(false);
+    if (!loading) return undefined;
+    const t = setTimeout(() => setSpinnerShown(true), delay);
+    return () => clearTimeout(t);
+  }, [loading, delay]);
 
-      const t = setTimeout(() => {
-        spinnerShownRef.current = true;
-        setShowSpinner(true);
-      }, delay);
+  useEffect(() => {
+    if (loading || !spinnerShown) return undefined;
+    const t = setTimeout(() => setSpinnerShown(false), minDisplay);
+    return () => clearTimeout(t);
+  }, [loading, spinnerShown, minDisplay]);
 
-      return () => clearTimeout(t);
-    }
-
-    // Loading just became false
-    if (spinnerShownRef.current) {
-      const t = setTimeout(() => {
-        setShowOverlay(false);
-      }, minDisplay);
-      return () => clearTimeout(t);
-    }
-
-    setShowOverlay(false);
-    return undefined;
-  }, [loading, delay, minDisplay]);
+  const showSpinner = spinnerShown;
+  const showOverlay = loading || spinnerShown;
 
   const hasChildren = children != null;
 

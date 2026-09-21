@@ -1,12 +1,14 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { PasswordGate } from './components/PasswordGate';
+import { LoginGate } from './components/LoginGate';
 import { AppLayout } from './components/AppLayout';
 import { NotificationPrompt } from './components/NotificationPrompt';
 import { InstallPrompt } from './components/InstallPrompt';
 import { LoadingState } from './components/LoadingState';
 import { ViewerProvider } from './contexts/ViewerContext';
+import { makeViewerLoader, readViewerToken } from './lib/viewerLoader';
 import { AuthProvider } from './contexts/AuthContext';
+import { TravelDataProvider } from './contexts/TravelDataProvider';
 import { UsPage } from './pages/UsPage';
 import { PastAllTime } from './pages/PastAllTime';
 import { PastRelationship } from './pages/PastRelationship';
@@ -20,8 +22,6 @@ const PastMap = lazy(() => import('./pages/PastMap').then((m) => ({ default: m.P
 function PageLoader() {
   return <LoadingState loading={true} />;
 }
-
-const isDev = import.meta.env.DEV;
 
 const mainRoutes = (
   <Route path="/" element={<AppLayout />}>
@@ -42,7 +42,7 @@ const mainRoutes = (
 );
 
 const viewerRoutes = (
-  <Route path="view" element={<ViewerProvider value={{ isViewer: true, basePath: '/view' }}><AppLayout /></ViewerProvider>}>
+  <Route path="view" element={<AppLayout />}>
     <Route index element={<Navigate to="/view/us" replace />} />
     <Route path="us" element={<UsPage />} />
     <Route path="past" element={<Navigate to="/view/past/all-time" replace />} />
@@ -59,20 +59,31 @@ const viewerRoutes = (
   </Route>
 );
 
+/** Read-only share link: data comes from the viewer-data Edge Function. */
+function ViewerApp() {
+  const [token] = useState(() => readViewerToken());
+  const loader = useMemo(() => makeViewerLoader(token), [token]);
+  const viewer = useMemo(() => ({ isViewer: true, basePath: '/view', token }), [token]);
+  return (
+    <ViewerProvider value={viewer}>
+      <TravelDataProvider loader={loader} loadSync={null}>
+        <Routes>{viewerRoutes}</Routes>
+      </TravelDataProvider>
+    </ViewerProvider>
+  );
+}
+
 function AppRouter() {
   const { pathname } = useLocation();
-  const isViewerPath = pathname.startsWith('/view');
+  if (pathname.startsWith('/view')) return <ViewerApp />;
 
-  if (isViewerPath) {
-    return (
-      <Routes>
-        {viewerRoutes}
-      </Routes>
-    );
-  }
-
-  const content = <Routes>{mainRoutes}</Routes>;
-  return isDev ? content : <PasswordGate>{content}</PasswordGate>;
+  return (
+    <LoginGate>
+      <TravelDataProvider>
+        <Routes>{mainRoutes}</Routes>
+      </TravelDataProvider>
+    </LoginGate>
+  );
 }
 
 function App() {

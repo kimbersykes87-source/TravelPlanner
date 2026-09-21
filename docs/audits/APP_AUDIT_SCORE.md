@@ -1,5 +1,8 @@
 # Travel Planner v2 – Scored App Audit
 
+> **Update 20 Sep 2026:** the password gate and open database described below have been replaced by Supabase sign-in and member-only Row Level Security. See [docs/setup/AUTH_SETUP.md](../setup/AUTH_SETUP.md).
+
+
 **Audit Date:** 2026-01-31  
 **Methodology:** Lighthouse-style criteria, codebase & config analysis  
 **Overall Score: 72/100** (Good)

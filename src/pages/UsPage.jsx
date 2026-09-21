@@ -1,17 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTravelData } from '../hooks/useTravelData';
-import { useViewer } from '../contexts/ViewerContext';
-import {
-  calcUkTaxDays,
-  calcUkWorkDays,
-  calcUsEsta,
-  calcSionaUsDays,
-  calcSchengen,
-  formatDdMmYy,
-  formatBorn,
-} from '../lib/visaCalculations';
+import { useViewer } from '../hooks/useViewer';
+import { personVisaSummary, WARNING_THRESHOLD } from '../lib/visa/engine';
+import { formatDdMmYy, formatBorn, passportLabel, days } from '../lib/format';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
+import { LastSynced } from '../components/LastSynced';
+import { AccountPanel } from '../components/AccountPanel';
 
 function formatFrequentFlyer(ff) {
   if (ff == null) return '';
@@ -20,60 +15,158 @@ function formatFrequentFlyer(ff) {
   return s.replace(/\s*:\s*/g, ' - ');
 }
 
-function ProfileCard({ profile, relationshipLog }) {
-  const [visaExpanded, setVisaExpanded] = useState(false);
-  const isKimber = (profile.full_name || '').toLowerCase().includes('kimber');
-  const profileKey = isKimber ? 'kimber' : 'siona';
+const TILE_COLOR = {
+  ok: 'var(--color-primary)',
+  warning: 'var(--color-warning, #f59e0b)',
+  error: 'var(--color-error, #ef4444)',
+};
 
-  const ukTax = calcUkTaxDays(relationshipLog, profileKey);
-  const ukWork = calcUkWorkDays(relationshipLog, profileKey);
-  const esta = isKimber ? calcUsEsta(relationshipLog) : null;
-  const sionaUs = !isKimber ? calcSionaUsDays(relationshipLog) : null;
-  const schengen = calcSchengen(relationshipLog, profileKey);
-
-  const passport1Label = isKimber ? 'British Passport' : 'Passport';
-  const passport1 =
-    profile.passport_number &&
-    `${passport1Label}: ${profile.passport_number}${profile.passport_expiry ? ` (Expiry ${formatDdMmYy(profile.passport_expiry)})` : ''}`;
-
-  const passport2 =
-    profile.passport2_number &&
-    `${profile.passport2_country || ''} Passport: ${profile.passport2_number}${profile.passport2_expiry ? ` (Expiry ${formatDdMmYy(profile.passport2_expiry)})` : ''}`.trim();
-
-  const frequentFlyers = [
-    profile.frequent_flyer_1 ?? profile.frequentFlyer1,
-    profile.frequent_flyer_2 ?? profile.frequentFlyer2,
-    profile.frequent_flyer_3 ?? profile.frequentFlyer3,
-    profile.frequent_flyer_4 ?? profile.frequentFlyer4,
-  ].filter((ff) => ff != null && String(ff).trim() !== '');
-
-  const VisaTile = ({ name, value, sub, warning }) => (
+/** A visa tile: name, headline figure, and up to three short detail lines. */
+function VisaTile({ name, value, lines = [], status = 'ok' }) {
+  const color = TILE_COLOR[status] || TILE_COLOR.ok;
+  const shown = lines.filter(Boolean);
+  return (
     <div
       style={{
         padding: 12,
         background: 'var(--color-bg-tertiary)',
         borderRadius: 10,
-        borderLeft: `4px solid ${warning ? 'var(--color-warning, #f59e0b)' : 'var(--color-primary)'}`,
+        borderLeft: `4px solid ${color}`,
         marginBottom: 8,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <span style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>{name}</span>
-        <span
-          style={{
-            fontSize: 16,
-            fontWeight: 600,
-            color: warning ? 'var(--color-warning)' : 'var(--color-primary)',
-          }}
-        >
-          {value}
-        </span>
+        <span style={{ fontSize: 16, fontWeight: 600, color, textAlign: 'right' }}>{value}</span>
       </div>
-      {sub && (
-        <p style={{ margin: '8px 0 0 0', fontSize: 12, color: 'var(--color-text-tertiary)' }}>{sub}</p>
+      {shown.length > 0 && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {shown.map((line) => (
+            <p key={line} style={{ margin: 0, fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+              {line}
+            </p>
+          ))}
+        </div>
       )}
     </div>
   );
+}
+
+const statusFor = (remaining, ruleId, breached = false) =>
+  breached || remaining <= 0 ? 'error' : remaining <= (WARNING_THRESHOLD[ruleId] ?? 0) ? 'warning' : 'ok';
+
+function VisaTiles({ summary }) {
+  const { uk, schengen, usEsta, usB1B2 } = summary;
+  const ukAfterPlans = uk.days.planned > 0 ? `After planned days: ${days(uk.days.remainingAfterPlans)} left` : null;
+  const workAfterPlans = uk.work.planned > 0 ? `After planned work days: ${uk.work.remainingAfterPlans} left` : null;
+
+  return (
+    <>
+      <VisaTile
+        name="UK Tax Days"
+        value={`${days(uk.days.remaining)} left`}
+        status={statusFor(uk.days.remaining, 'UK-TAX', uk.days.remainingAfterPlans < 0)}
+        lines={[
+          `${uk.days.used} of ${uk.days.limit} used this tax year`,
+          ukAfterPlans,
+          `Tax year ends ${formatDdMmYy(uk.taxYearEnd)}`,
+        ]}
+      />
+      <VisaTile
+        name="UK Work Days"
+        value={uk.work.tieTriggered ? 'Work tie triggered' : `${days(uk.work.remaining)} left`}
+        status={statusFor(uk.work.remaining, 'UK-WORK', uk.work.tieTriggered || uk.work.remainingAfterPlans < 0)}
+        lines={[`${uk.work.used} of ${uk.work.limit} used (40 or more creates a work tie)`, workAfterPlans]}
+      />
+      {usEsta && <EstaTile esta={usEsta} />}
+      {usB1B2 && (
+        <VisaTile
+          name="US B1/B2 (guide)"
+          value={`${days(usB1B2.remaining)} left`}
+          status={statusFor(usB1B2.remaining, 'US-ROLLING365', !!usB1B2.plannedBreachOn)}
+          lines={[
+            `${usB1B2.used} of ${usB1B2.limit} days in the US in the last ${usB1B2.windowDays} days`,
+            usB1B2.plannedBreachOn ? `Planned trips go over on ${formatDdMmYy(usB1B2.plannedBreachOn)}` : null,
+            'Each stay is limited by the I-94 date given at entry',
+          ]}
+        />
+      )}
+      <VisaTile
+        name="Schengen"
+        value={`${days(schengen.remaining)} left`}
+        status={statusFor(schengen.remaining, 'SCHENGEN-ROLLING', !!schengen.plannedBreachOn)}
+        lines={[
+          `${schengen.used} of ${schengen.limit} used in the last ${schengen.windowDays} days`,
+          schengen.plannedBreachOn ? `Planned trips go over on ${formatDdMmYy(schengen.plannedBreachOn)}` : null,
+          schengen.fullyClearsOn ? `Back to 90 on ${formatDdMmYy(schengen.fullyClearsOn)} if you stay out` : null,
+        ]}
+      />
+    </>
+  );
+}
+
+function EstaTile({ esta }) {
+  if (esta.inAdmission) {
+    return (
+      <VisaTile
+        name="US ESTA"
+        value={`${days(esta.remaining)} left`}
+        status={statusFor(esta.remaining, 'US-ADMISSION', esta.plannedOverLimit)}
+        lines={[
+          `Day ${esta.daysUsed} of ${esta.limit}, entered ${formatDdMmYy(esta.admissionStart)}`,
+          `Must leave by ${formatDdMmYy(esta.mustLeaveBy)}`,
+          esta.plannedExit
+            ? `Planned exit ${formatDdMmYy(esta.plannedExit)}${esta.plannedOverLimit ? ' (over the limit)' : ''}`
+            : null,
+        ]}
+      />
+    );
+  }
+  const next = esta.nextEntry;
+  return (
+    <VisaTile
+      name="US ESTA"
+      value="Not in the US"
+      status={next?.overLimit ? 'error' : 'ok'}
+      lines={[
+        esta.lastAdmission
+          ? `Last stay ${formatDdMmYy(esta.lastAdmission.start)} to ${formatDdMmYy(esta.lastAdmission.end)} (${days(esta.lastAdmission.days)})`
+          : null,
+        next
+          ? `Next entry ${formatDdMmYy(next.start)}, planned ${days(next.days)}${next.overLimit ? ' (over the 90-day limit)' : ''}`
+          : null,
+      ]}
+    />
+  );
+}
+
+function ProfileCard({ profile, relationshipLog, visaRules }) {
+  const [visaExpanded, setVisaExpanded] = useState(false);
+  const person = String(profile.profile_id || profile.full_name || '').toLowerCase().includes('siona') ? 'siona' : 'kimber';
+  const summary = useMemo(
+    () => personVisaSummary(relationshipLog, person, { visaRules }),
+    [relationshipLog, person, visaRules]
+  );
+
+  // Both hold British passports as their primary passport.
+  const passport1 =
+    profile.passport_number &&
+    `${passportLabel('United Kingdom')}: ${profile.passport_number}${profile.passport_expiry ? ` (Expiry ${formatDdMmYy(profile.passport_expiry)})` : ''}`;
+
+  const passport2 =
+    profile.passport2_number &&
+    `${passportLabel(profile.passport2_country)}: ${profile.passport2_number}${profile.passport2_expiry ? ` (Expiry ${formatDdMmYy(profile.passport2_expiry)})` : ''}`;
+
+  const usVisa =
+    profile.us_visa_number &&
+    `US B1/B2 Visa: ${profile.us_visa_number}${profile.us_visa_expiry ? ` (Expiry ${formatDdMmYy(profile.us_visa_expiry)})` : ''}`;
+
+  const frequentFlyers = [
+    profile.frequent_flyer_1,
+    profile.frequent_flyer_2,
+    profile.frequent_flyer_3,
+    profile.frequent_flyer_4,
+  ].filter((ff) => ff != null && String(ff).trim() !== '');
 
   return (
     <div
@@ -119,15 +212,18 @@ function ProfileCard({ profile, relationshipLog }) {
         </div>
       </div>
 
-      {(passport1 || passport2 || frequentFlyers.length > 0) && (
+      {(passport1 || passport2 || usVisa || frequentFlyers.length > 0) && (
         <div style={{ marginBottom: 16 }}>
-          {(passport1 || passport2) && (
+          {(passport1 || passport2 || usVisa) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: frequentFlyers.length > 0 ? 12 : 0 }}>
               {passport1 && (
                 <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)' }}>{passport1}</p>
               )}
               {passport2 && (
                 <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)' }}>{passport2}</p>
+              )}
+              {usVisa && (
+                <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-secondary)' }}>{usVisa}</p>
               )}
             </div>
           )}
@@ -185,44 +281,7 @@ function ProfileCard({ profile, relationshipLog }) {
         </button>
         {visaExpanded && (
         <div id={`visa-tracking-${profile.profile_id}`} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          <VisaTile
-            name="UK Tax Days"
-            value={`${ukTax.remaining} days remaining`}
-            sub={`Tax year ends ${formatDdMmYy(ukTax.taxYearEnd)} · ${ukTax.ukDays} days used`}
-          />
-          <VisaTile
-            name="UK Work Days"
-            value={`${ukWork.remaining} remaining`}
-            sub={`${ukWork.workDays} days used` + (ukWork.warning ? ' · Work tie warning' : '')}
-            warning={ukWork.warning}
-          />
-          {esta && (
-            <VisaTile
-              name="US ESTA"
-              value={esta.inAdmission ? `${esta.admissionDays} days (${esta.remaining} remaining)` : 'Not in US'}
-              sub={
-                esta.inAdmission && esta.admissionStart
-                  ? `Admission from ${formatDdMmYy(esta.admissionStart)}`
-                  : null
-              }
-            />
-          )}
-          {sionaUs && (
-            <VisaTile
-              name="US B1/B2"
-              value={`${sionaUs.usDays} days (${sionaUs.remaining} remaining)`}
-              sub="Rolling 365 days"
-            />
-          )}
-          <VisaTile
-            name="Schengen"
-            value={`${schengen.daysUsed} days used`}
-            sub={
-              schengen.fullRefreshDate
-                ? `Full refresh ${formatDdMmYy(schengen.fullRefreshDate)}`
-                : `${schengen.remaining} days remaining`
-            }
-          />
+          <VisaTiles summary={summary} />
         </div>
         )}
       </div>
@@ -231,7 +290,7 @@ function ProfileCard({ profile, relationshipLog }) {
 }
 
 export function UsPage() {
-  const { data, loading, error } = useTravelData();
+  const { data, loading, error, lastSync } = useTravelData();
   const { isViewer } = useViewer();
 
   if (error) return <p style={{ color: 'var(--color-error)' }}>{error}</p>;
@@ -249,6 +308,7 @@ export function UsPage() {
       >
         US
       </h1>
+      {!isViewer && <LastSynced lastSync={lastSync} />}
 
       {isViewer ? (
         <div
@@ -267,11 +327,12 @@ export function UsPage() {
       ) : data.profiles.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {data.profiles.map((p) => (
-            <ProfileCard key={p.profile_id} profile={p} relationshipLog={data.relationshipLog || []} />
+            <ProfileCard key={p.profile_id} profile={p} relationshipLog={data.relationshipLog} visaRules={data.visaRules} />
           ))}
+          <AccountPanel />
         </div>
       ) : (
-        <p style={{ color: 'var(--color-text-tertiary)' }}>No profiles yet. Sync from Sheets to Supabase.</p>
+        <p style={{ color: 'var(--color-text-tertiary)' }}>No profiles yet. Run Travel Planner, Sync to Supabase in the Google Sheet.</p>
       )}
       </div>
     </LoadingState>

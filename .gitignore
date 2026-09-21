@@ -22,8 +22,15 @@ dist-ssr
 .DS_Store
 *.suo
 *.ntvs*
-lighthouse-report.html
-lighthouse-report.json
+lighthouse-report*.html
+lighthouse-report*.json
 *.njsproj
 *.sln
 *.sw?
+
+# Local data exports
+data.csv
+*.csv
+
+# Files set aside for deletion (never commit)
+_to_delete/

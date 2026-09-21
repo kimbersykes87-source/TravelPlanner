@@ -7,9 +7,9 @@ import { LoadingState } from '../components/LoadingState';
 
 export function PastRelationship() {
   const { data, loading, error } = useTravelData();
-  const statistics = data?.statistics || [];
-  const countries = data?.countries || [];
-  const relationshipLog = data?.relationshipLog || [];
+  const statistics = data.statistics;
+  const countries = data.countries;
+  const relationshipLog = data.relationshipLog;
 
   const top5RelationshipCountries = useMemo(() => {
     const byCountry = new Map();

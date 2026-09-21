@@ -96,7 +96,7 @@ Full setup: **[docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md)**
 3. Script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (values in GOOGLE_SETUP.md)
 4. Run `onAddTravelPlannerMenu()` once to add menu
 5. Use menu: **Travel Planner → Sync to Supabase**
-6. **Optional – daily trigger:** Triggers → Add trigger → `runScheduledSync`, day timer. Keeps Supabase active (7-day free tier requirement). See [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md#step-6-optional--daily-trigger-keeps-supabase-active).
+6. **Optional – daily trigger:** Triggers → Add trigger → `runScheduledSync`, day timer. Keeps Supabase active (7-day free tier requirement). See [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md#step-6-optional--daily-trigger-keeps-supabase-active). Only use `runScheduledSync` and (if needed) `midnightRefreshStatistics`; do **not** add `rebuildScenarioCache` (removed Feb 2026).
 
 ---
 
@@ -111,9 +111,4 @@ Target: `travelplanner.kimbersykes.com`
 
 ## Share Link (view-only mode)
 
-The app has a **view-only** route at `/view` (no password). When users tap **Share** on a scenario, the modal shows:
-
-**Share this link:** `https://your-domain.com/view`
-
-- The link is built from `window.location.origin` + `/view`, so it automatically uses your deployed URL (e.g. `https://travelplanner.kimbersykes.com/view`).
-- Recipients can open that URL to see the read-only planner; no env config needed.
+Read-only links look like `https://travelplanner-ks.pages.dev/view?k=<token>` and are created on the Us tab (**Read-only share link**). Data for viewers comes from the `viewer-data` Edge Function, which leaves out passport, visa and other personal details. See [VIEWER_MODE.md](../specs/VIEWER_MODE.md).

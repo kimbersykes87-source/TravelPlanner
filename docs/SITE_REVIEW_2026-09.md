@@ -184,7 +184,9 @@ Checked the Apps Script code, the live Supabase data (read-only) and the Sheet.
 
 ## 8. Work done (20 Sep 2026)
 
-All changes are in the project folder, not yet committed or deployed. Checks: 21 unit tests pass, ESLint clean, production build OK, and a browser run against a copy of the real travel log.
+Built 20 Sep, committed and put live 21 Sep (`647e2ba` on `feat/globe-loader`).
+Full go-live record, including problems we hit: [GO_LIVE_2026-09.md](deployment/GO_LIVE_2026-09.md).
+Checks: 21 unit tests pass, ESLint clean, production build OK.
 
 **Phase 1: correct numbers (done)**
 - All tables now load in pages of 1,000 rows, so the app sees the whole log again (it had stopped at 26 Jun 2026).
@@ -194,12 +196,12 @@ All changes are in the project folder, not yet committed or deployed. Checks: 21
 - Scenario cards now show Schengen and USA together when a trip has both; the Visa Check lists each person and rule with baseline, peak and days left; the editor warns about visa limits before saving.
 - 21 unit tests (`npm test`).
 
-**Phase 1: Google Sheets sync (done, needs pasting into Apps Script)**
+**Phase 1: Google Sheets sync (live)**
 - New `apps-script/SyncToSupabase.gs`: checks the Sheet (duplicate/missing dates, unknown countries, swapped expiry dates), upserts in batches, removes rows deleted from the Sheet (with a safety limit), records every run in `sync_runs`, fails loudly in scheduled runs, reads dates in the Sheet's time zone, and adds a **Check data only** menu item.
 - Us tab shows "Synced from Google Sheets x ago" (amber after 48 hours, red on failure) and any data warnings.
 - Removed dead PreRelationshipCountries, PresentBookings and BucketList sync (the bucket list is app-only).
 
-**Phase 2: sign-in and lock-down (built, needs the rollout in docs/setup/AUTH_SETUP.md)**
+**Phase 2: sign-in and lock-down (live)**
 - Email + password sign-in (Supabase Auth); stays signed in per phone. Shared password removed.
 - Migration `20260920130000_auth_and_rls.sql`: member-only access via `app_members`; sheet tables writable only by the sync.
 - `/view?k=<token>` share links served by the new `viewer-data` Edge Function, without passports, visas, DOB, frequent flyer or UK work days. Links are created and replaced on the Us tab.

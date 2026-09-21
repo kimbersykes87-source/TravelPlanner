@@ -1,6 +1,7 @@
 # Viewer mode (read-only share link)
 
-A read-only version of the app for family and friends.
+A read-only version of the app for family and friends. Live since 21 September
+2026 (`viewer-data` Edge Function). See [GO_LIVE_2026-09.md](../deployment/GO_LIVE_2026-09.md).
 
 ## Sharing
 

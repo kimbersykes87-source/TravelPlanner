@@ -1,7 +1,7 @@
 # Fionas Kimberinho - Travel Planner Application Summary
 
-**Last Updated**: 2026-09-20  
-**Status**: Fully Functional Production Application (Deployed on Cloudflare Pages)
+**Last Updated**: 2026-09-21  
+**Status**: Fully Functional Production Application (Deployed on Cloudflare Pages). September 2026 update live: sign-in, locked database, full log, new visa engine. See [GO_LIVE_2026-09.md](../deployment/GO_LIVE_2026-09.md).
 
 ---
 

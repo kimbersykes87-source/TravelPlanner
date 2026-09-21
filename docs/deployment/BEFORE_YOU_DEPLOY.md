@@ -34,7 +34,7 @@ If your data is still in Google Sheets:
 1. Open [your spreadsheet](https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit)
 2. **Extensions** → **Apps Script**
 3. Add the script from `apps-script/SyncToSupabase.gs` (see [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md))
-4. Add script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (from your `.env.local`)
+4. Add script properties: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (see [GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md)). Never put the service role key in the website.
 5. Run **Travel Planner → Sync to Supabase**
 6. *(Optional)* Add a daily trigger for `runScheduledSync` to keep Supabase active (7-day free tier). Only add triggers for `runScheduledSync` and (if using Statistics refresh) `midnightRefreshStatistics`—do **not** add `rebuildScenarioCache` (removed Feb 2026).
 

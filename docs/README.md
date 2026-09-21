@@ -11,6 +11,7 @@ Deploy, Cloudflare, and pre-deploy checklist.
 | File | Description |
 |------|-------------|
 | [DEPLOY_INSTRUCTIONS.md](deployment/DEPLOY_INSTRUCTIONS.md) | **Canonical deploy steps for Cursor/agents** — when the user says "deploy", follow this |
+| [GO_LIVE_2026-09.md](deployment/GO_LIVE_2026-09.md) | **What went live 21 Sep 2026:** visa fix, sign-in, lock-down, sync, share links |
 | [DEPLOYMENT.md](deployment/DEPLOYMENT.md) | Deployment overview: env vars, build settings, Supabase CLI, keep-alive, Sheets sync |
 | [BEFORE_YOU_DEPLOY.md](deployment/BEFORE_YOU_DEPLOY.md) | One-time checklist: migrations, Sheets sync, Cloudflare credentials |
 | [CLOUDFLARE_AUDIT.md](deployment/CLOUDFLARE_AUDIT.md) | Cloudflare deployment audit (security, build, UX) |
@@ -24,7 +25,7 @@ Setup guides for data sources and push.
 | File | Description |
 |------|-------------|
 | [GOOGLE_SETUP.md](setup/GOOGLE_SETUP.md) | Google Sheets + Apps Script → Supabase sync (checks, deletes, sync history) |
-| [AUTH_SETUP.md](setup/AUTH_SETUP.md) | **One-time rollout:** sign-in accounts, database lock-down, share-link function |
+| [AUTH_SETUP.md](setup/AUTH_SETUP.md) | Sign-in and lock-down (completed 21 Sep 2026; keep for recovery) |
 | [WEBHOOKS_INSTALL_GUIDE.md](setup/WEBHOOKS_INSTALL_GUIDE.md) | Database webhooks for push notifications (5 webhooks) |
 | [PUSH_NOTIFICATIONS_SETUP.md](setup/PUSH_NOTIFICATIONS_SETUP.md) | Full push setup: VAPID, Edge Functions, webhooks, cron |
 | [REMAINING_PUSH_STEPS.md](setup/REMAINING_PUSH_STEPS.md) | Short checklist for finishing push setup |

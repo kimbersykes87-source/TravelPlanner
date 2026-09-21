@@ -93,7 +93,7 @@ Full setup: **[docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md)**
 
 1. Open your [Google Spreadsheet](https://docs.google.com/spreadsheets/d/1OcJ76HBPrdN461U7NEgM9Tsazf78WcFUh24zjXN-Q-8/edit) → **Extensions** → **Apps Script**
 2. Add `apps-script/SyncToSupabase.gs` as a new script file
-3. Script properties: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (values in GOOGLE_SETUP.md)
+3. Script properties: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (values in GOOGLE_SETUP.md). The anon key no longer works after the 21 Sep 2026 lock-down.
 4. Run `onAddTravelPlannerMenu()` once to add menu
 5. Use menu: **Travel Planner → Sync to Supabase**
 6. **Optional – daily trigger:** Triggers → Add trigger → `runScheduledSync`, day timer. Keeps Supabase active (7-day free tier requirement). See [docs/setup/GOOGLE_SETUP.md](../setup/GOOGLE_SETUP.md#step-6-optional--daily-trigger-keeps-supabase-active). Only use `runScheduledSync` and (if needed) `midnightRefreshStatistics`; do **not** add `rebuildScenarioCache` (removed Feb 2026).

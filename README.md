@@ -15,7 +15,8 @@ Google Sheet.
 - **How it fits together:** [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
 - **Visa maths:** [docs/specs/VISA_RULES.md](docs/specs/VISA_RULES.md). Change rules only in `src/lib/visa/` and keep `npm test` green.
 - **Sheet sync:** [docs/setup/GOOGLE_SETUP.md](docs/setup/GOOGLE_SETUP.md).
-- **Sign-in and database security:** [docs/setup/AUTH_SETUP.md](docs/setup/AUTH_SETUP.md).
+- **Sign-in and database security:** [docs/setup/AUTH_SETUP.md](docs/setup/AUTH_SETUP.md) (live since 21 Sep 2026).
+- **What the September 2026 update shipped:** [docs/deployment/GO_LIVE_2026-09.md](docs/deployment/GO_LIVE_2026-09.md).
 - All docs: [docs/README.md](docs/README.md).
 
 ## Quick start

@@ -1,13 +1,18 @@
-# Sign-in and database lock-down (one-time rollout)
+# Sign-in and database lock-down
 
-**Why:** until this is done, anyone with the website's public key can read and
-change every table, including passport numbers. After it, only Kimber and
-Siona (signed in) can read or write, the Google Sheets sync uses a private key,
-and the `/view` share link goes through a server function that hides personal
-details.
+**Status: complete (21 September 2026).** Kimber and Siona sign in with email
+and password. Only those two can read or write. The Google Sheets sync uses
+the service role key. The `/view` share link goes through the `viewer-data`
+function, which hides personal details.
 
-**Order matters.** Follow the steps top to bottom. The site keeps working at
-every step except for the minute between steps 5 and 6.
+What shipped, and the problems we hit: [GO_LIVE_2026-09.md](../deployment/GO_LIVE_2026-09.md).
+
+The steps below are the one-time rollout, kept here for recovery. Do not run
+them again unless you are rebuilding from scratch.
+
+**Order matters.** The site stays usable at every step except the minute
+between steps 5 and 6. Do not lock the database before the new app and both
+accounts exist.
 
 You need: the Supabase dashboard for project `xaxbbtzsyrtchtjrjvqy`, the
 Google Sheet's Apps Script editor, and Cursor with this repo.
@@ -39,8 +44,12 @@ Google Sheet's Apps Script editor, and Cursor with this repo.
 
 Deploy as usual (see [DEPLOY_INSTRUCTIONS.md](../deployment/DEPLOY_INSTRUCTIONS.md)).
 The site now shows a **Sign in** screen instead of the shared password. Sign in
-on each phone once; it stays signed in. (The database is still open at this
-point, so everything works exactly as before once you are signed in.)
+on each phone once; it stays signed in.
+
+The old "allow all for anon" policies do **not** cover signed-in users
+(role `authenticated`). After this step the Us tab will look empty until
+steps 5 and 6. That is expected. Do not add a temporary `anon` policy to
+"fix" it; go on to the lock-down and add the members.
 
 You can remove `VITE_APP_PASSWORD` from Cloudflare's environment variables; it
 is no longer used.
@@ -52,8 +61,12 @@ From Cursor's terminal in `C:\dev\TravelPlanner_v2`:
 ```powershell
 npx supabase login
 npx supabase link --project-ref xaxbbtzsyrtchtjrjvqy
-npx supabase functions deploy viewer-data --no-verify-jwt
+npx supabase functions deploy viewer-data --no-verify-jwt --use-api
 ```
+
+Run `npx supabase login` in a normal Cursor terminal (not the agent shell):
+the agent cannot open the browser login. Use the Travel Planner Supabase
+account, not another org on the same machine.
 
 ## 5. Apply the database changes
 
@@ -96,12 +109,20 @@ days. **Make a new link** switches off the old one.
 
 - Signed out, the site shows only the sign-in screen.
 - **Supabase > Advisors > Security** shows no "RLS disabled" or "policy allows
-  anon" warnings for the app tables.
+  anon" warnings for the app tables. Two other warnings are expected and
+  harmless: `is_member()` is SECURITY DEFINER (needed), and leaked password
+  protection is optional (Authentication > Attack Protection).
 - The old `/view` link without `?k=...` says the link is not valid.
 
 ## If something goes wrong
 
-Everything can be reverted in the SQL Editor. To reopen the database
-temporarily (for example while fixing an email typo), run for the affected
-table: `CREATE POLICY "temp open" ON <table> FOR SELECT TO anon USING (true);`
-and drop it again afterwards with `DROP POLICY "temp open" ON <table>;`.
+Everything can be reverted in the SQL Editor. To reopen one table temporarily
+(for example while fixing an email typo), signed-in users need
+`authenticated`, not `anon`:
+
+```sql
+CREATE POLICY "temp open" ON <table> FOR SELECT TO authenticated USING (true);
+```
+
+Drop it again with `DROP POLICY "temp open" ON <table>;`. Then fix
+`app_members` and reload.

@@ -21,8 +21,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title || 'Travel Planner', {
       body: data.body || 'New update',
-      icon: '/assets/app-icons/icon.svg',
-      badge: '/assets/app-icons/icon.svg',
+      icon: '/assets/app-icons/icon-192.png',
+      badge: '/assets/app-icons/icon-192.png',
       tag: data.tag || 'travel-planner',
       data: data,
     })

@@ -41,8 +41,8 @@ Dates are read in the Sheet's own time zone, so a date never shifts by a day.
    | `SUPABASE_URL` | `https://xaxbbtzsyrtchtjrjvqy.supabase.co` |
    | `SUPABASE_SERVICE_ROLE_KEY` | Supabase **Project Settings > API Keys > service_role** (secret; never commit it) |
 
-   `SUPABASE_ANON_KEY` is still accepted as a fallback, but stops working once
-   the database is locked down ([AUTH_SETUP.md](AUTH_SETUP.md)).
+   `SUPABASE_ANON_KEY` is a leftover fallback and **does not work** now the
+   database is locked (21 Sep 2026). Use the service role key only.
 
 2. Replace the `SyncToSupabase` script file with
    [`apps-script/SyncToSupabase.gs`](../../apps-script/SyncToSupabase.gs). Keep

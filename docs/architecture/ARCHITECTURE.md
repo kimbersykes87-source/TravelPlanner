@@ -1,6 +1,6 @@
 # Travel Planner v2: architecture
 
-**Last updated:** 20 Sep 2026
+**Last updated:** 21 Sep 2026 (sign-in and lock-down live; see [GO_LIVE_2026-09.md](../deployment/GO_LIVE_2026-09.md))
 
 A private PWA for Kimber and Siona: where we have been, what needs booking,
 what we are planning, and how many days we have left under each visa or
@@ -76,7 +76,8 @@ src/
 - Secrets live in `.env.local` (gitignored) and in the Supabase/Cloudflare
   dashboards. The browser only ever has the public anon key.
 
-Rollout steps: [AUTH_SETUP.md](../setup/AUTH_SETUP.md).
+Rollout (completed 21 Sep 2026): [AUTH_SETUP.md](../setup/AUTH_SETUP.md).
+What shipped: [GO_LIVE_2026-09.md](../deployment/GO_LIVE_2026-09.md).
 
 ## Visa and residency rules
 

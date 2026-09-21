@@ -57,9 +57,9 @@ export function LoginGate({ children }) {
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30, maxWidth: 400, width: '100%' }}>
         <img
-          src="/assets/app-icons/icon.svg"
+          src="/assets/app-icons/icon-192.png"
           alt=""
-          style={{ width: 120, height: 120, filter: 'brightness(0) invert(1)' }}
+          style={{ width: 120, height: 120 }}
         />
         <h1
           style={{

@@ -8,33 +8,13 @@ import { scenarioRemaining, validateScenario } from '../lib/visa/engine';
 import { Icon } from '../components/Icon';
 import { LoadingState } from '../components/LoadingState';
 import { useViewer } from '../hooks/useViewer';
+import { SCENARIO_ICONS, scenarioIconPath } from '../lib/scenarioIcons';
 
 /** ISO2 for a stay/bucket-list country name (for the flag). */
 const getCountryIso2 = (country) => countryToIso2(country);
 
-const SCENARIO_ICONS = [
-  { value: 'adventure', label: 'Adventure' },
-  { value: 'beach', label: 'Beach' },
-  { value: 'camping', label: 'Camping' },
-  { value: 'dining', label: 'Dining' },
-  { value: 'hikiing', label: 'Hiking' },
-  { value: 'mountains', label: 'Mountains' },
-  { value: 'nature', label: 'Nature' },
-  { value: 'resort', label: 'Resort' },
-  { value: 'roadTrip', label: 'Road Trip' },
-  { value: 'SilverSprings', label: 'Silver Springs' },
-  { value: 'snowboarding', label: 'Snowboarding' },
-  { value: 'sunny', label: 'Sunny' },
-  { value: 'tropical', label: 'Tropical' },
-  { value: 'vineyard', label: 'Vineyard' },
-];
-
-const SCENARIO_ICON_PATH = (value) => {
-  const v = value || 'adventure';
-  const legacyMap = { hiking: 'hikiing', future: 'adventure' };
-  const file = legacyMap[v] || v;
-  return `/assets/scenario-icons/${file}.svg`;
-};
+// SCENARIO_ICONS and the icon-path helper now live in ../lib/scenarioIcons
+// so this list can't drift out of sync with the Bucket List page.
 
 const PROFILE_SCOPE_OPTIONS = [
   { value: 'both', label: 'Together' },
@@ -434,7 +414,7 @@ export function FutureScenarios() {
             }}
           >
             <img
-              src={SCENARIO_ICON_PATH(sc.icon)}
+              src={scenarioIconPath(sc.icon)}
               alt=""
               style={{ width: 24, height: 24, objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
               onError={(e) => { e.target.src = '/assets/scenario-icons/adventure.svg'; }}
@@ -804,7 +784,7 @@ export function FutureScenarios() {
                     }}
                   >
                     <img
-                      src={SCENARIO_ICON_PATH(scenario.icon)}
+                      src={scenarioIconPath(scenario.icon)}
                       alt=""
                       style={{ width: 18, height: 18, objectFit: 'contain', filter: 'brightness(0) invert(1)', flexShrink: 0 }}
                       onError={(e) => { e.target.src = '/assets/scenario-icons/adventure.svg'; }}
@@ -851,7 +831,7 @@ export function FutureScenarios() {
                           }}
                         >
                           <img
-                            src={SCENARIO_ICON_PATH(o.value)}
+                            src={scenarioIconPath(o.value)}
                             alt=""
                             style={{ width: 18, height: 18, objectFit: 'contain', filter: 'brightness(0) invert(1)', flexShrink: 0 }}
                             onError={(e) => { e.target.style.display = 'none'; }}

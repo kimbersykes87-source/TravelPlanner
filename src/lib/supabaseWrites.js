@@ -197,3 +197,40 @@ export async function deleteBucketListItem(id) {
   const { error } = await supabase.from('bucket_list').delete().eq('id', id);
   if (error) throw error;
 }
+
+const BUCKET_LIST_PHOTOS_BUCKET = 'bucket-list-photos';
+const MAX_BUCKET_LIST_PHOTO_BYTES = 10 * 1024 * 1024; // 10MB
+
+/**
+ * Upload a bucket list photo straight to Supabase Storage and return its
+ * public URL, so items carry a real photo instead of a pasted link (which
+ * is often a share-page link rather than a raw image and silently fails to
+ * render).
+ *
+ * Requires the `bucket-list-photos` storage bucket - see the migration
+ * `supabase/migrations/20260922100000_bucket_list_photo_storage.sql`.
+ */
+export async function uploadBucketListPhoto(itemId, file) {
+  requireSupabase();
+  if (!file) throw new Error('No file selected');
+  if (!file.type?.startsWith('image/')) throw new Error('Please choose an image file');
+  if (file.size > MAX_BUCKET_LIST_PHOTO_BYTES) throw new Error('Image is larger than 10MB');
+
+  const ext = (file.name?.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `${itemId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET_LIST_PHOTOS_BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (uploadError) {
+    if (/bucket.*not.*found/i.test(uploadError.message || '')) {
+      throw new Error(
+        'Photo storage isn\'t set up yet - apply the bucket-list-photos migration in Supabase, then try again.'
+      );
+    }
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage.from(BUCKET_LIST_PHOTOS_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}

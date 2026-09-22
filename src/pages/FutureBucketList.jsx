@@ -560,23 +560,22 @@ function BucketTile({ item, countries, getCountryIso2, onEdit, onDelete, isViewe
           }}
         />
       )}
-      {!hasImage && (
-        <img
-          src={scenarioIconPath(item.icon)}
-          alt=""
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '42%',
-            height: '42%',
-            objectFit: 'contain',
-            opacity: 0.18,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
+      <img
+        src={scenarioIconPath(item.icon)}
+        alt=""
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '42%',
+          height: '42%',
+          objectFit: 'contain',
+          opacity: hasImage ? 0.5 : 0.18,
+          filter: hasImage ? 'brightness(0) invert(1)' : 'none',
+          pointerEvents: 'none',
+        }}
+      />
 
       <div
         style={{

@@ -70,6 +70,36 @@ export const SCENARIO_ICONS = [
   { value: 'worldTour', label: 'World Tour' },
   { value: 'photography', label: 'Photography' },
   { value: 'stargazing', label: 'Stargazing' },
+
+  // Food, drink & nightlife
+  { value: 'wineTasting', label: 'Wine Tasting' },
+  { value: 'brewery', label: 'Brewery' },
+  { value: 'foodTour', label: 'Food Tour' },
+  { value: 'cosy', label: 'Cosy' },
+  { value: 'concert', label: 'Concert' },
+
+  // Occasions
+  { value: 'wedding', label: 'Wedding' },
+  { value: 'birthday', label: 'Birthday' },
+  { value: 'festiveSeason', label: 'Festive Season' },
+
+  // More ways to get around & get active
+  { value: 'motorbike', label: 'Motorbike' },
+  { value: 'helicopterTour', label: 'Helicopter Tour' },
+  { value: 'golf', label: 'Golf' },
+  { value: 'scenicDrive', label: 'Scenic Drive' },
+  { value: 'sunriseHike', label: 'Sunrise Hike' },
+
+  // Places & ways of staying
+  { value: 'church', label: 'Church' },
+  { value: 'retreat', label: 'Retreat' },
+  { value: 'arctic', label: 'Arctic' },
+  { value: 'glamping', label: 'Glamping' },
+  { value: 'ranch', label: 'Ranch' },
+  { value: 'luxury', label: 'Luxury' },
+  { value: 'slowTravel', label: 'Slow Travel' },
+  { value: 'hiddenGem', label: 'Hidden Gem' },
+  { value: 'birdwatching', label: 'Birdwatching' },
 ];
 
 /** value -> label lookup, for quick display. */
